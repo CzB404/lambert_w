@@ -8,7 +8,7 @@
 #include <complex>
 #include <chrono>
 #include <random>
-#include "lambert_w.hpp"
+#include "boost/math/special_functions/lambert_w.hpp"
 
 using RealType = long double;
 using IntegralType = int;

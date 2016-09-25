@@ -33,7 +33,6 @@
 		<Linker>
 			<Add option="-Wl,--stack,16777216" />
 		</Linker>
-		<Unit filename="lambert_w.hpp" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />
