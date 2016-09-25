@@ -4,6 +4,25 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
+//Sources:
+//
+//Lambert W function - Wikipedia, the free encyclopedia
+//
+//Lagrange inversion theorem - Wikipedia, the free encyclopedia
+//
+//Numerical Evaluation of the Lambert W Function
+//and Application to Generation of Generalized
+//Gaussian Noise With Exponent 1/2
+// - François Chapeau-Blondeau, Member, IEEE, and Abdelilah Monir
+//(p2160 IEEE TRANSACTIONS ON SIGNAL PROCESSING, VOL. 50, NO. 9, SEPTEMBER 2002)
+//
+//Having Fun with Lambert W(x) Function
+// - Darko Veberic a,b,c
+//   a University of Nova Gorica, Slovenia
+//   b IK, Forschungszentrum Karlsruhe, Germany
+//   c J. Stefan Institute, Ljubljana, Slovenia
+//(arXiv:1003.1628v1 [cs.MS] 8 Mar 2010)
+
 #ifndef LAMBW_HPP_INCLUDED
 #define LAMBW_HPP_INCLUDED
 

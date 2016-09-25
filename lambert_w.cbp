@@ -21,7 +21,8 @@
 				<Option type="1" />
 				<Option compiler="cygwin_gcc_620" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-mtune=generic" />
+					<Add option="-O3" />
 				</Compiler>
 			</Target>
 		</Build>
@@ -30,9 +31,6 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
-		<Linker>
-			<Add option="-Wl,--stack,16777216" />
-		</Linker>
 		<Unit filename="boost/math/special_functions/lambert_w.hpp" />
 		<Unit filename="main.cpp" />
 		<Extensions>

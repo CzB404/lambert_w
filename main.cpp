@@ -39,13 +39,13 @@ int main()
 
 	const std::size_t L = 1000000;
 
-	std::array<double,L> w;
+	//std::array<double,L> w;
 
 	auto t0 = std::chrono::steady_clock::now();
 
 	for(std::size_t k = 0; k < L; ++k)
 	{
-		w[k] = boost::math::lambert_w(dist(rnd));
+		boost::math::lambert_w(dist(rnd));
 	}
 
 	auto t1 = std::chrono::steady_clock::now();
