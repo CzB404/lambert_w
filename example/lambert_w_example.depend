@@ -1,0 +1,16 @@
+# depslib dependency file v1.0
+1474810339 source:g:\personal\programming\_github_repos\lambert_w\example\main.cpp
+	<iostream>
+	<complex>
+	<chrono>
+	<random>
+	<boost/math/special_functions/lambert_w.hpp>
+
+1474810806 g:\personal\programming\_github_repos\lambert_w\include\boost\math\special_functions\lambert_w.hpp
+	<array>
+	<cmath>
+	<complex>
+	<limits>
+	<type_traits>
+	<boost/math/constants/constants.hpp>
+
