@@ -33,8 +33,8 @@ int main()
 	std::cout << "W(42) = " << boost::math::lambert_w(42.) << std::endl;
 	std::cout << "W(42)*exp(W(42)) = " << boost::math::lambert_w(42.)*std::exp(boost::math::lambert_w(42.)) << std::endl;
 
-	std::random_device rd;
-	std::default_random_engine rnd(rd());
+	//std::random_device rd;
+	std::default_random_engine rnd;//(rd());
 	std::cauchy_distribution<double> dist;
 
 	const std::size_t L = 1000000;
