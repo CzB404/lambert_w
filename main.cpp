@@ -17,7 +17,7 @@ int main()
 {
 	//using namespace std::literals::complex_literals;
 
-	std::chrono::steady_clock clock;
+	//std::chrono::steady_clock clock;
 
 	std::cout << "W(-1/e) = " << boost::math::lambert_w(-std::exp(-1)) << std::endl;
 	std::cout << "W(-1/e,-1) = " << boost::math::lambert_w(-std::exp(-1),-1) << std::endl;
@@ -41,14 +41,14 @@ int main()
 
 	std::array<double,L> w;
 
-	auto t0 = clock.now();
+	auto t0 = std::chrono::steady_clock::now();
 
 	for(std::size_t k = 0; k < L; ++k)
 	{
 		w[k] = boost::math::lambert_w(dist(rnd));
 	}
 
-	auto t1 = clock.now();
+	auto t1 = std::chrono::steady_clock::now();
 
 	std::chrono::duration<double> diff = t1-t0;
 

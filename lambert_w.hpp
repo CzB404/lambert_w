@@ -119,21 +119,21 @@ namespace math
 		}
 		else
 		{
-			return std::round(score);
+			return (int)std::round(score);
 		}
 	}
 
 	template<typename ConstantType>
     /*constexpr*/ ConstantType _lambw_tay_coeffs(std::size_t k)
     {
-    	ConstantType n = k+1;
+    	ConstantType n = (ConstantType)(k+1);
     	return (-std::pow(((n+1)/n),n-1));
     }
 
     template<typename ConstantType>
     /*constexpr*/ ConstantType _lambw_laur_coeffs(std::size_t k)
     {
-    	ConstantType n = k;
+    	ConstantType n = (ConstantType)k;
     	switch(k)
     	{
 		case 0:
@@ -143,7 +143,7 @@ namespace math
 			return -0.5;
 			break;
 		default:
-			return std::pow(n/(n-1.),n)*(1.-n)/(n+1.);
+			return std::pow(n/(n-(ConstantType)1.),n)*((ConstantType)1.-n)/(n+(ConstantType)1.);
 			break;
     	}
     }
