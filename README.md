@@ -3,4 +3,4 @@ A C++ library that can compute the Lambert W function for floating point and com
 
 For now it is slowly being prepared to be submitted to the Boost review board.
 
-The library uses some C++14 features and requires the compiler to support that standard.
+This branch is dedicated to reduce the library's standards requirement to C++11, increasing compatibility. In its current state it does not compile.
