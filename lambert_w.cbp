@@ -33,6 +33,7 @@
 		<Linker>
 			<Add option="-Wl,--stack,16777216" />
 		</Linker>
+		<Unit filename="boost/math/special_functions/lambert_w.hpp" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />
