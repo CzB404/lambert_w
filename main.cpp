@@ -37,7 +37,7 @@ int main()
 	std::default_random_engine rnd(rd());
 	std::cauchy_distribution<double> dist;
 
-	const std::size_t L = 10000;
+	const std::size_t L = 1000000;
 
 	std::array<double,L> w;
 

@@ -62,7 +62,7 @@ namespace math
 	}
 
 	template<typename ConstantType, std::size_t L>
-	constexpr std::array<ConstantType,L> _lambw_coeff_array(ConstantType (&coeffs)(std::size_t) )
+	std::array<ConstantType,L> _lambw_coeff_array(ConstantType (&coeffs)(std::size_t) )
 	{
 		std::array<ConstantType,L> ans;
 		for(std::size_t k = 0; k < L; ++k)
@@ -149,29 +149,69 @@ namespace math
     }
 
 	template<typename ConstantType>
-	class _lw_tc
+	std::array<ConstantType,_lambw_series_L> _lw_tc();
+
+	const std::array<float,_lambw_series_L> _lw_tc_float = _lambw_coeff_array<float,_lambw_series_L>(_lambw_tay_coeffs<float>);
+
+	template<>
+	std::array<float,_lambw_series_L> _lw_tc<float>()
 	{
-	public:
-		static std::array<ConstantType,_lambw_series_L> value = _lambw_coeff_array<ConstantType,_lambw_series_L>(_lambw_tay_coeffs<ConstantType>);
-	};
+		return _lw_tc_float;
+	}
+
+	const std::array<double,_lambw_series_L> _lw_tc_double = _lambw_coeff_array<double,_lambw_series_L>(_lambw_tay_coeffs<double>);
+
+	template<>
+	std::array<double,_lambw_series_L> _lw_tc<double>()
+	{
+		return _lw_tc_double;
+	}
+
+	const std::array<long double,_lambw_series_L> _lw_tc_long_double = _lambw_coeff_array<long double,_lambw_series_L>(_lambw_tay_coeffs<long double>);
+
+	template<>
+	std::array<long double,_lambw_series_L> _lw_tc<long double>()
+	{
+		return _lw_tc_long_double;
+	}
 
 	template<typename ConstantType>
-	class _lw_lc
+	std::array<ConstantType,_lambw_series_L> _lw_lc();
+
+	const std::array<float,_lambw_series_L> _lw_lc_float = _lambw_coeff_array<float,_lambw_series_L>(_lambw_laur_coeffs<float>);
+
+	template<>
+	std::array<float,_lambw_series_L> _lw_lc<float>()
 	{
-	public:
-		static std::array<ConstantType,_lambw_series_L> value = _lambw_coeff_array<ConstantType,_lambw_series_L>(_lambw_laur_coeffs<ConstantType>);
-	};
+		return _lw_lc_float;
+	}
+
+	const std::array<double,_lambw_series_L> _lw_lc_double = _lambw_coeff_array<double,_lambw_series_L>(_lambw_laur_coeffs<double>);
+
+	template<>
+	std::array<double,_lambw_series_L> _lw_lc<double>()
+	{
+		return _lw_lc_double;
+	}
+
+	const std::array<long double,_lambw_series_L> _lw_lc_long_double = _lambw_coeff_array<long double,_lambw_series_L>(_lambw_laur_coeffs<long double>);
+
+	template<>
+	std::array<long double,_lambw_series_L> _lw_lc<long double>()
+	{
+		return _lw_lc_long_double;
+	}
 
 	template<typename ArgumentType = double,typename ConstantType = double>
 	ArgumentType _lambw_tay(const ArgumentType &z)
 	{
-		return z*_lambw_series_sum(z,_lw_tc<ConstantType>::value);
+		return z*_lambw_series_sum(z,_lw_tc<ConstantType>());
 	}
 
 	template<typename ArgumentType = double,typename ConstantType = double>
 	ArgumentType _lambw_laur(const ArgumentType &z)
 	{
-		return z/_lambw_series_sum(z,_lw_lc<ConstantType>::value);
+		return z/_lambw_series_sum(z,_lw_lc<ConstantType>());
 	}
 
 	template<typename IntegralType>
@@ -246,17 +286,37 @@ namespace math
 	}
 
 	template<typename ConstantType>
-	class _lw_midc
+	std::array<ConstantType,_lambw_series_L> _lw_midc();
+
+	const std::array<float,_lambw_series_L> _lw_midc_float = {(1.f/2.f), (1.f/8.f),-(1.f/12.f),(1.f/16.f),-(13.f/20.f),-(47.f/312.f),(73.f/1316.f),-(2447.f/2336.f)};
+
+	template<>
+	std::array<float,_lambw_series_L> _lw_midc<float>()
 	{
-	public:
-		static std::array<ConstantType,_lambw_mid_series_L> value = {(1./2.), (1./8.),-(1./12.),(1./16.),-(13./20.),-(47./312.),(73./1316.),-(2447./2336.)};
-	};
+		return _lw_midc_float;
+	}
+
+	const std::array<double,_lambw_series_L> _lw_midc_double = {(1./2.), (1./8.),-(1./12.),(1./16.),-(13./20.),-(47./312.),(73./1316.),-(2447./2336.)};
+
+	template<>
+	std::array<double,_lambw_series_L> _lw_midc<double>()
+	{
+		return _lw_midc_double;
+	}
+
+	const std::array<long double,_lambw_series_L> _lw_midc_long_double = {(1.l/2.l), (1.l/8.l),-(1.l/12.l),(1.l/16.l),-(13.l/20.l),-(47.l/312.l),(73.l/1316.l),-(2447.l/2336.l)};
+
+	template<>
+	std::array<long double,_lambw_series_L> _lw_midc<long double>()
+	{
+		return _lw_midc_long_double;
+	}
 
 	template<typename ArgumentType, typename ConstantType = double>
 	ArgumentType _lambw_mid(const ArgumentType &z)
 	{
 		ArgumentType x = std::log(z)-(ConstantType)1.;
-		return _lambw_series_sum(x,_lw_midc<ConstantType>::value);
+		return _lambw_series_sum(x,_lw_midc<ConstantType>());
 	}
 
 	template<typename ConstantType>
@@ -312,11 +372,31 @@ namespace math
 	}
 
 	template<typename ConstantType>
-	class _lw_singc
+	std::array<ConstantType,_lambw_series_L> _lw_singc();
+
+	const std::array<float,_lambw_series_L> _lw_singc_float = _lambw_coeff_array<float,_lambw_series_L>(_lambw_sing_coeffs<float>);
+
+	template<>
+	std::array<float,_lambw_series_L> _lw_singc<float>()
 	{
-	public:
-		static std::array<ConstantType,_lambw_sing_series_L> value = _lambw_coeff_array<ConstantType,_lambw_sing_series_L>(_lambw_sing_coeffs<ConstantType>);
-	};
+		return _lw_singc_float;
+	}
+
+	const std::array<double,_lambw_series_L> _lw_singc_double = _lambw_coeff_array<double,_lambw_series_L>(_lambw_sing_coeffs<double>);
+
+	template<>
+	std::array<double,_lambw_series_L> _lw_singc<double>()
+	{
+		return _lw_singc_double;
+	}
+
+	const std::array<long double,_lambw_series_L> _lw_singc_long_double = _lambw_coeff_array<long double,_lambw_series_L>(_lambw_sing_coeffs<long double>);
+
+	template<>
+	std::array<long double,_lambw_series_L> _lw_singc<long double>()
+	{
+		return _lw_singc_long_double;
+	}
 
 	template<typename ArgumentType = double, typename ConstantType = double, typename IndexType = int>
 	ArgumentType _lambw_sing(const ArgumentType &z, IndexType k)
@@ -330,7 +410,7 @@ namespace math
 		{
 			p = ((ConstantType)std::pow(-1.,k%2))*std::sqrt((ConstantType)2.*(-std::exp((ConstantType)1.+std::log(-z))+(ConstantType)1.));
 		}
-		return -_lambw_series_sum(p,_lw_singc<ConstantType>::value);
+		return -_lambw_series_sum(p,_lw_singc<ConstantType>());
 	}
 
 	template<typename ArgumentType, typename ConstantType, typename IndexType>
