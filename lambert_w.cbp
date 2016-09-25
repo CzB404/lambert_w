@@ -26,14 +26,19 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-std=c++11" />
+			<Add option="-std=c++14" />
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Linker>
-			<Add option="-Wl,--stack,16777216" />
+			<Add option="-Wl,--stack,33554432" />
 		</Linker>
-		<Unit filename="lambert_w.hpp" />
+		<Unit filename="datafile.hpp" />
+		<Unit filename="lambw.cpp">
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="lambw.hpp" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />
