@@ -1,9 +1,3 @@
-
-//          Copyright Balazs Cziraki 2016
-// Distributed under the Boost Software License, Version 1.0.
-//    (See accompanying file LICENSE_1_0.txt or copy at
-//          http://www.boost.org/LICENSE_1_0.txt)
-
 #ifndef LAMBW_HPP_INCLUDED
 #define LAMBW_HPP_INCLUDED
 
@@ -25,16 +19,28 @@ namespace math
 	const std::size_t _lambw_sing_series_L = 10;
 
 	template<typename ConstantType>
-	const ConstantType _lambw_imaginary_unit = std::numeric_limits<ConstantType>::quiet_NaN();
+	const ConstantType _lambw_imaginary_unit()
+	{
+		return std::numeric_limits<ConstantType>::quiet_NaN();
+	}
 
 	template<>
-	const std::complex<float> _lambw_imaginary_unit<std::complex<float>> = std::complex<float>((float)0.,(float)1.);
+	const std::complex<float> _lambw_imaginary_unit<std::complex<float>>()
+	{
+		return std::complex<float>((float)0.,(float)1.);
+	}
 
 	template<>
-	const std::complex<double> _lambw_imaginary_unit<std::complex<double>> = std::complex<double>((double)0.,(double)1.);
+	const std::complex<double> _lambw_imaginary_unit<std::complex<double>>()
+	{
+		return std::complex<double>((double)0.,(double)1.);
+	}
 
 	template<>
-	const std::complex<long double> _lambw_imaginary_unit<std::complex<long double>> = std::complex<long double>((long double)0.,(long double)1.);
+	const std::complex<long double> _lambw_imaginary_unit<std::complex<long double>>()
+	{
+		return std::complex<long double>((long double)0.,(long double)1.);
+	}
 
 	template<typename ArgumentType, typename ConstantType, std::size_t L>
 	ArgumentType _lambw_series_sum(const ArgumentType &z, const std::array<ConstantType,L> &c)
@@ -50,7 +56,7 @@ namespace math
 	}
 
 	template<typename ConstantType, std::size_t L>
-	std::array<ConstantType,L> _lambw_coeff_array(ConstantType (&coeffs)(std::size_t) )
+	constexpr std::array<ConstantType,L> _lambw_coeff_array(ConstantType (&coeffs)(std::size_t) )
 	{
 		std::array<ConstantType,L> ans;
 		for(std::size_t k = 0; k < L; ++k)
@@ -60,8 +66,9 @@ namespace math
 		return ans;
 	}
 
-	template<typename ArgumentType>
-	constexpr ArgumentType _lambw_linstrips(const ArgumentType &z)
+	///constexpr-s in these require C++14
+    template<typename ArgumentType>
+	/*constexpr*/ ArgumentType _lambw_linstrips(const ArgumentType &z)
 	{
 		if(std::is_arithmetic<ArgumentType>::value)
 		{
@@ -70,7 +77,7 @@ namespace math
 		else
 		{
 			return z-boost::math::constants::two_pi<decltype(std::real(z))>()
-			*_lambw_imaginary_unit<ArgumentType>*std::round(std::imag(z)/boost::math::constants::two_pi<decltype(std::real(z))>());
+			*_lambw_imaginary_unit<ArgumentType>()*std::round(std::imag(z)/boost::math::constants::two_pi<decltype(std::real(z))>());
 		}
 	}
 
@@ -111,14 +118,14 @@ namespace math
 	}
 
 	template<typename ConstantType>
-	constexpr ConstantType _lambw_tay_coeffs(std::size_t k)
+    /*constexpr*/ ConstantType _lambw_tay_coeffs(std::size_t k)
     {
     	ConstantType n = k+1;
     	return (-std::pow(((n+1)/n),n-1));
     }
 
     template<typename ConstantType>
-    constexpr ConstantType _lambw_laur_coeffs(std::size_t k)
+    /*constexpr*/ ConstantType _lambw_laur_coeffs(std::size_t k)
     {
     	ConstantType n = k;
     	switch(k)
@@ -136,21 +143,29 @@ namespace math
     }
 
 	template<typename ConstantType>
-	const std::array<ConstantType,_lambw_series_L> _lw_tc = _lambw_coeff_array<ConstantType,_lambw_series_L>(_lambw_tay_coeffs<ConstantType>);
+	class _lw_tc
+	{
+	public:
+		static std::array<ConstantType,_lambw_series_L> value = _lambw_coeff_array<ConstantType,_lambw_series_L>(_lambw_tay_coeffs<ConstantType>);
+	};
 
 	template<typename ConstantType>
-	const std::array<ConstantType,_lambw_series_L> _lw_lc = _lambw_coeff_array<ConstantType,_lambw_series_L>(_lambw_laur_coeffs<ConstantType>);
+	class _lw_lc
+	{
+	public:
+		static std::array<ConstantType,_lambw_series_L> value = _lambw_coeff_array<ConstantType,_lambw_series_L>(_lambw_laur_coeffs<ConstantType>);
+	};
 
 	template<typename ArgumentType = double,typename ConstantType = double>
 	ArgumentType _lambw_tay(const ArgumentType &z)
 	{
-		return z*_lambw_series_sum(z,_lw_tc<ConstantType>);
+		return z*_lambw_series_sum(z,_lw_tc<ConstantType>::value);
 	}
 
 	template<typename ArgumentType = double,typename ConstantType = double>
 	ArgumentType _lambw_laur(const ArgumentType &z)
 	{
-		return z/_lambw_series_sum(z,_lw_lc<ConstantType>);
+		return z/_lambw_series_sum(z,_lw_lc<ConstantType>::value);
 	}
 
 	template<typename IntegralType>
@@ -182,7 +197,7 @@ namespace math
 		}
 		else
 		{
-			return std::log(z) + (boost::math::constants::two_pi<decltype(std::real(z))>()*k)*_lambw_imaginary_unit<ArgumentType>;
+			return std::log(z) + (boost::math::constants::two_pi<decltype(std::real(z))>()*k)*_lambw_imaginary_unit<ArgumentType>();
 		}
 	}
 
@@ -225,20 +240,24 @@ namespace math
 	}
 
 	template<typename ConstantType>
-	const std::array<ConstantType,_lambw_mid_series_L> _lw_midc = std::array<ConstantType,_lambw_mid_series_L>({(1./2.), (1./8.),-(1./12.),(1./16.),-(13./20.),-(47./312.),(73./1316.),-(2447./2336.)});
+	class _lw_midc
+	{
+	public:
+		static std::array<ConstantType,_lambw_mid_series_L> value = {(1./2.), (1./8.),-(1./12.),(1./16.),-(13./20.),-(47./312.),(73./1316.),-(2447./2336.)};
+	};
 
 	template<typename ArgumentType, typename ConstantType = double>
 	ArgumentType _lambw_mid(const ArgumentType &z)
 	{
 		ArgumentType x = std::log(z)-(ConstantType)1.;
-		return _lambw_series_sum(x,_lw_midc<ConstantType>);
+		return _lambw_series_sum(x,_lw_midc<ConstantType>::value);
 	}
 
 	template<typename ConstantType>
-	constexpr ConstantType _lambw_sing_coeffs_mu(std::size_t k);
+	/*constexpr*/ ConstantType _lambw_sing_coeffs_mu(std::size_t k);
 
 	template<typename ConstantType>
-	constexpr ConstantType _lambw_sing_coeffs_alpha(std::size_t k)
+	/*constexpr*/ ConstantType _lambw_sing_coeffs_alpha(std::size_t k)
 	{
 		if(k == 0)
 		{
@@ -260,7 +279,7 @@ namespace math
 	}
 
 	template<typename ConstantType>
-	constexpr ConstantType _lambw_sing_coeffs_mu(std::size_t k)
+	/*constexpr*/ ConstantType _lambw_sing_coeffs_mu(std::size_t k)
 	{
 		if(k == 0)
 		{
@@ -280,14 +299,18 @@ namespace math
 	}
 
 	template<typename ConstantType>
-	constexpr ConstantType _lambw_sing_coeffs(std::size_t k)
+	/*constexpr*/ ConstantType _lambw_sing_coeffs(std::size_t k)
 	{
 		ConstantType ans = _lambw_sing_coeffs_mu<ConstantType>(k+1)/_lambw_sing_coeffs_mu<ConstantType>(k);
 		return ans;
 	}
 
 	template<typename ConstantType>
-	const std::array<ConstantType,_lambw_sing_series_L> _lw_singc = _lambw_coeff_array<ConstantType,_lambw_sing_series_L>(_lambw_sing_coeffs<ConstantType>);
+	class _lw_singc
+	{
+	public:
+		static std::array<ConstantType,_lambw_sing_series_L> value = _lambw_coeff_array<ConstantType,_lambw_sing_series_L>(_lambw_sing_coeffs<ConstantType>);
+	};
 
 	template<typename ArgumentType = double, typename ConstantType = double, typename IndexType = int>
 	ArgumentType _lambw_sing(const ArgumentType &z, IndexType k)
@@ -301,7 +324,7 @@ namespace math
 		{
 			p = ((ConstantType)std::pow(-1.,k%2))*std::sqrt((ConstantType)2.*(-std::exp((ConstantType)1.+std::log(-z))+(ConstantType)1.));
 		}
-		return -_lambw_series_sum(p,_lw_singc<ConstantType>);
+		return -_lambw_series_sum(p,_lw_singc<ConstantType>::value);
 	}
 
 	template<typename ArgumentType, typename ConstantType, typename IndexType>

@@ -1,9 +1,3 @@
-
-//          Copyright Balazs Cziraki 2016
-// Distributed under the Boost Software License, Version 1.0.
-//    (See accompanying file LICENSE_1_0.txt or copy at
-//          http://www.boost.org/LICENSE_1_0.txt)
-
 #include <iostream>
 #include <complex>
 #include <chrono>
@@ -15,7 +9,7 @@ using IntegralType = int;
 
 int main()
 {
-	using namespace std::literals::complex_literals;
+	//using namespace std::literals::complex_literals;
 
 	std::chrono::steady_clock clock;
 
@@ -23,13 +17,13 @@ int main()
 	std::cout << "W(-1/e,-1) = " << boost::math::lambert_w(-std::exp(-1),-1) << std::endl;
 	std::cout << "W(0) = " << boost::math::lambert_w(0.) << std::endl;
 	std::cout << "W(0,-1) = " << boost::math::lambert_w(0.,-1) << std::endl;
-	std::cout << "W(-pi/2+0i) = " << boost::math::lambert_w(-boost::math::constants::half_pi<double>()+0i) << std::endl;
+	std::cout << "W(-pi/2+0i) = " << boost::math::lambert_w(std::complex<double>(-boost::math::constants::half_pi<double>(),0)) << std::endl;
 	std::cout << "W(1) = " << boost::math::lambert_w(1.) << std::endl;
 	std::cout << "W(inf) = " << boost::math::lambert_w(std::numeric_limits<double>::infinity()) << std::endl;
 	std::cout << "W(-1) = " << boost::math::lambert_w(-1.) << std::endl;
 	std::cout << "W(-1,-1) = " << boost::math::lambert_w(-1.,-1) << std::endl;
 	std::cout << "W(1,-1) = " << boost::math::lambert_w(1.,-1) << std::endl;
-	std::cout << "W(1+0i,-1) = " << boost::math::lambert_w(1.+0i,-1) << std::endl;
+	std::cout << "W(1+0i,-1) = " << boost::math::lambert_w(std::complex<double>(1,0),-1) << std::endl;
 	std::cout << "W(42) = " << boost::math::lambert_w(42.) << std::endl;
 	std::cout << "W(42)*exp(W(42)) = " << boost::math::lambert_w(42.)*std::exp(boost::math::lambert_w(42.)) << std::endl;
 
@@ -37,7 +31,7 @@ int main()
 	std::default_random_engine rnd(rd());
 	std::cauchy_distribution<double> dist;
 
-	const std::size_t L = 1000000;
+	const std::size_t L = 10000;
 
 	std::array<double,L> w;
 
