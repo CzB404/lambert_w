@@ -6,12 +6,25 @@
 
 #include <iostream>
 #include <complex>
-#include <chrono>
-#include <random>
+//#include <chrono>
+#include <ctime>
+//#include <random>
+#include <cstdlib>
+#include <cmath>
+#include <boost/math/constants/constants.hpp>
 #include <boost/math/special_functions/lambert_w.hpp>
 
-using RealType = long double;
-using IntegralType = int;
+//using RealType = long double;
+//using IntegralType = int;
+
+typedef double RealType;
+typedef int IntegralType;
+
+RealType dist()
+{
+	RealType r = (RealType)rand()/(RealType)RAND_MAX;
+	return std::tan(boost::math::constants::pi<RealType>()*(r-(RealType)0.5));
+}
 
 int main()
 {
@@ -34,25 +47,28 @@ int main()
 	std::cout << "W(42)*exp(W(42)) = " << boost::math::lambert_w(42.)*std::exp(boost::math::lambert_w(42.)) << std::endl;
 
 	//std::random_device rd;
-	std::default_random_engine rnd;//(rd());
-	std::cauchy_distribution<double> dist;
+	//std::default_random_engine rnd;//(rd());
+	//std::cauchy_distribution<double> dist;
 
 	const std::size_t L = 1000000;
 
 	//std::array<double,L> w;
 
-	auto t0 = std::chrono::steady_clock::now();
+	//auto t0 = std::chrono::steady_clock::now();
+	std::time_t t0 = std::time(NULL);
 
 	for(std::size_t k = 0; k < L; ++k)
 	{
-		boost::math::lambert_w(dist(rnd));
+		boost::math::lambert_w(dist(/*rnd*/));
 	}
 
-	auto t1 = std::chrono::steady_clock::now();
+	//auto t1 = std::chrono::steady_clock::now();
+	std::time_t t1 = std::time(NULL);
 
-	std::chrono::duration<double> diff = t1-t0;
+	//std::chrono::duration<double> diff = t1-t0;
+	std::time_t diff = t1-t0;
 
-	std::cout << "Calculating W for " << L << " random values took " << diff.count() << " seconds." << std::endl;
+	std::cout << "Calculating W for " << L << " random values took " << diff/*.count()*/ << " seconds." << std::endl;
 
     return 0;
 }

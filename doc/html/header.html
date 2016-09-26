@@ -1,0 +1,371 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+<head>
+  <meta http-equiv="Content-Language" content="en-us">
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+  <link rel="stylesheet" type="text/css" href="../../../boost.css">
+
+  <title>{{library}} - Header &lt;{{header}}&gt; - 1.61.0</title>
+<link rel="icon" href="/favicon.ico" type="image/ico"><link rel="stylesheet" type="text/css" href="/style-v2/section-basic.css"></head>
+
+<body link="#0000FF" vlink="#800080">  <div id="boost-common-heading-doc">
+    <div class="heading-inner">
+  <div class="heading-placard"></div>
+
+  <h1 class="heading-title">
+  <a href="/">
+  <img src="/gfx/space.png" alt= "Boost C++ Libraries" class="heading-logo" />
+  <span class="heading-boost">Boost</span>
+  <span class="heading-cpplibraries">C++ Libraries</span>
+  </a></h1>
+
+  <p class="heading-quote">
+  <q>...one of the most highly
+  regarded and expertly designed C++ library projects in the
+  world.</q> <span class="heading-attribution">&mdash; <a href=
+  "http://www.gotw.ca/" class="external">Herb Sutter</a> and <a href=
+  "http://en.wikipedia.org/wiki/Andrei_Alexandrescu" class="external">Andrei
+  Alexandrescu</a>, <a href=
+  "http://safari.awprofessional.com/?XmlId=0321113586" class="external">C++
+  Coding Standards</a></span></p>
+</div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-33761719-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </div>
+
+  <div id="boost-common-heading-doc-spacer"></div>
+
+  
+        <h1 align="center">{{library}}</h1>
+
+        <h2 align="center">Header &lt;{{header}}&gt;</h2>
+      <h2>Contents</h2>
+
+  <dl class="page-index">
+    <dt><a href="#introduction">Introduction</a></dt>
+
+    <dt><a href="#macros">Macros</a></dt>
+
+    <dd>
+      <dl class="page-index">
+        <dt><a href="#macro-spec">{{macro name}}</a></dt>
+      </dl>
+    </dd>
+
+    <dt><a href="#values">Values</a></dt>
+
+    <dd>
+      <dl class="page-index">
+        <dt><a href="#value-spec">{{value name}}</a></dt>
+      </dl>
+    </dd>
+
+    <dt><a href="#types">Types</a></dt>
+
+    <dd>
+      <dl class="page-index">
+        <dt><a href="#type-spec">{{type name}}</a></dt>
+      </dl>
+    </dd>
+
+    <dt><a href="#classes">Classes</a></dt>
+
+    <dd>
+      <dl class="page-index">
+        <dt><a href="#class-spec">Class <code>{{class name}}</code></a></dt>
+
+        <dd>
+          <dl class="page-index">
+            <dt><a href="#class-spec-synopsis">Class <code>{{class
+            name}}</code> synopsis</a></dt>
+
+            <dt><a href="#class-spec-ctors">Class <code>{{class name}}</code>
+            constructors and destructor</a></dt>
+
+            <dt><a href="#class-spec-comparisons">Class <code>{{class
+            name}}</code> comparison functions</a></dt>
+
+            <dt><a href="#class-spec-modifiers">Class <code>{{class
+            name}}</code> modifier functions</a></dt>
+
+            <dt><a href="#class-spec-observers">Class <code>{{class
+            name}}</code> observer functions</a></dt>
+
+            <dt><a href="#class-spec-statics">Class <code>{{class
+            name}}</code> static functions</a></dt>
+          </dl>
+        </dd>
+      </dl>
+    </dd>
+
+    <dt><a href="#functions">Functions</a></dt>
+
+    <dd>
+      <dl class="page-index">
+        <dt><a href="#function-spec">{{function name}}</a></dt>
+      </dl>
+    </dd>
+
+    <dt><a href="#objects">Objects</a></dt>
+
+    <dd>
+      <dl class="page-index">
+        <dt><a href="#object-spec">{{object name}}</a></dt>
+      </dl>
+    </dd>
+
+    <dt><a href="#examples">Example(s)</a></dt>
+  </dl>
+  <hr>
+
+  <h2><a name="introduction" id="introduction"></a>Introduction</h2>
+
+  <p>{{Introductory text}}</p>
+
+  <h2><a name="macros" id="macros"></a>Macros</h2>
+
+  <p><a name="macro-spec" id="macro-spec"></a>{{Macro specifications}}</p>
+
+  <h2><a name="values" id="values"></a>Values</h2>
+
+  <p><a name="value-spec" id="value-spec"></a>{{Value specifications}}</p>
+
+  <h2><a name="types" id="types"></a>Types</h2>
+
+  <p><a name="type-spec" id="type-spec"></a>{{Type specifications}}</p>
+
+  <h2><a name="classes" id="classes"></a>Classes</h2>
+
+  <h3><a name="class-spec" id="class-spec"></a>Class <code>{{class
+  name}}</code></h3>
+
+  <p>{{class overview text}}</p>
+
+  <h4><a name="class-spec-synopsis" id="class-spec-synopsis"></a>Class
+  <code>{{class name}}</code> synopsis</h4>
+  <pre>
+namespace boost
+{
+    class {{class name}}
+        {
+        };
+};
+</pre>
+
+  <h4><a name="class-spec-ctors" id="class-spec-ctors"></a>Class
+  <code>{{class name}}</code> constructors and destructor</h4>
+  <pre>
+{{constructor}}
+</pre>
+
+  <dl class="function-semantics">
+    <dt><b>Requires:</b> {{text}}</dt>
+
+    <dt><b>Effects:</b> {{text}}</dt>
+
+    <dt><b>Postconditions:</b> {{text}}</dt>
+
+    <dt><b>Returns:</b> {{text}}</dt>
+
+    <dt><b>Throws:</b> {{text}}</dt>
+
+    <dt><b>Complexity:</b> {{text}}</dt>
+
+    <dt><b>Note:</b> {{text}}</dt>
+
+    <dt><b>Danger:</b> {{text}}</dt>
+
+    <dt><b>Rationale:</b> {{text}}</dt>
+  </dl>
+  <pre>
+{{destructor}}
+</pre>
+
+  <dl class="function-semantics">
+    <dt><b>Requires:</b> {{text}}</dt>
+
+    <dt><b>Effects:</b> {{text}}</dt>
+
+    <dt><b>Postconditions:</b> {{text}}</dt>
+
+    <dt><b>Returns:</b> {{text}}</dt>
+
+    <dt><b>Throws:</b> {{text}}</dt>
+
+    <dt><b>Complexity:</b> {{text}}</dt>
+
+    <dt><b>Note:</b> {{text}}</dt>
+
+    <dt><b>Danger:</b> {{text}}</dt>
+
+    <dt><b>Rationale:</b> {{text}}</dt>
+  </dl>
+
+  <h4><a name="class-spec-comparisons" id="class-spec-comparisons"></a>Class
+  <code>{{class name}}</code> comparison functions</h4>
+  <pre>
+{{function}}
+</pre>
+
+  <dl class="function-semantics">
+    <dt><b>Requires:</b> {{text}}</dt>
+
+    <dt><b>Effects:</b> {{text}}</dt>
+
+    <dt><b>Postconditions:</b> {{text}}</dt>
+
+    <dt><b>Returns:</b> {{text}}</dt>
+
+    <dt><b>Throws:</b> {{text}}</dt>
+
+    <dt><b>Complexity:</b> {{text}}</dt>
+
+    <dt><b>Note:</b> {{text}}</dt>
+
+    <dt><b>Danger:</b> {{text}}</dt>
+
+    <dt><b>Rationale:</b> {{text}}</dt>
+  </dl>
+
+  <h4><a name="class-spec-modifiers" id="class-spec-modifiers"></a>Class
+  <code>{{class name}}</code> modifier functions</h4>
+  <pre>
+{{function}}
+</pre>
+
+  <dl class="function-semantics">
+    <dt><b>Requires:</b> {{text}}</dt>
+
+    <dt><b>Effects:</b> {{text}}</dt>
+
+    <dt><b>Postconditions:</b> {{text}}</dt>
+
+    <dt><b>Returns:</b> {{text}}</dt>
+
+    <dt><b>Throws:</b> {{text}}</dt>
+
+    <dt><b>Complexity:</b> {{text}}</dt>
+
+    <dt><b>Note:</b> {{text}}</dt>
+
+    <dt><b>Danger:</b> {{text}}</dt>
+
+    <dt><b>Rationale:</b> {{text}}</dt>
+  </dl>
+
+  <h4><a name="class-spec-observers" id="class-spec-observers"></a>Class
+  <code>{{class name}}</code> observer functions</h4>
+  <pre>
+{{function}}
+</pre>
+
+  <dl class="function-semantics">
+    <dt><b>Requires:</b> {{text}}</dt>
+
+    <dt><b>Effects:</b> {{text}}</dt>
+
+    <dt><b>Postconditions:</b> {{text}}</dt>
+
+    <dt><b>Returns:</b> {{text}}</dt>
+
+    <dt><b>Throws:</b> {{text}}</dt>
+
+    <dt><b>Complexity:</b> {{text}}</dt>
+
+    <dt><b>Note:</b> {{text}}</dt>
+
+    <dt><b>Danger:</b> {{text}}</dt>
+
+    <dt><b>Rationale:</b> {{text}}</dt>
+  </dl>
+
+  <h4><a name="class-spec-statics" id="class-spec-statics"></a>Class
+  <code>{{class name}}</code> static functions</h4>
+  <pre>
+{{function}}
+</pre>
+
+  <dl class="function-semantics">
+    <dt><b>Requires:</b> {{text}}</dt>
+
+    <dt><b>Effects:</b> {{text}}</dt>
+
+    <dt><b>Postconditions:</b> {{text}}</dt>
+
+    <dt><b>Returns:</b> {{text}}</dt>
+
+    <dt><b>Throws:</b> {{text}}</dt>
+
+    <dt><b>Complexity:</b> {{text}}</dt>
+
+    <dt><b>Note:</b> {{text}}</dt>
+
+    <dt><b>Danger:</b> {{text}}</dt>
+
+    <dt><b>Rationale:</b> {{text}}</dt>
+  </dl>
+
+  <h2><a name="functions" id="functions"></a>Functions</h2>
+  <pre>
+<a name="function-spec" id="function-spec"></a>{{function}}
+</pre>
+
+  <dl class="function-semantics">
+    <dt><b>Requires:</b> {{text}}</dt>
+
+    <dt><b>Effects:</b> {{text}}</dt>
+
+    <dt><b>Postconditions:</b> {{text}}</dt>
+
+    <dt><b>Returns:</b> {{text}}</dt>
+
+    <dt><b>Throws:</b> {{text}}</dt>
+
+    <dt><b>Complexity:</b> {{text}}</dt>
+
+    <dt><b>Note:</b> {{text}}</dt>
+
+    <dt><b>Danger:</b> {{text}}</dt>
+
+    <dt><b>Rationale:</b> {{text}}</dt>
+  </dl>
+
+  <h2><a name="objects" id="objects"></a>Objects</h2>
+
+  <p><a name="object-spec" id="object-spec"></a>{{Object specifications}}</p>
+
+  <h2><a name="examples" id="examples"></a>Example(s)</h2>
+
+  <p>{{Example(s)}}</p>
+  <hr>
+
+  <p><a href="http://validator.w3.org/check?uri=referer"><img border="0" src=
+  "../../../doc/images/valid-html401.png" alt="Valid HTML 4.01 Transitional"
+  height="31" width="88"></a></p>
+
+  <p>Revised 
+  <!--webbot bot="Timestamp" s-type="EDITED" s-format="%d %B, %Y" startspan -->04
+  December, 2006<!--webbot bot="Timestamp" endspan i-checksum="38514" --></p>
+
+  <p><i>Copyright &copy; 2006 <a href=
+  "mailto:{{address}}">{{author}}</a></i></p>
+
+  <p><i>Distributed under the Boost Software License, Version 1.0. (See
+  accompanying file <a href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</a> or
+  copy at <a href=
+  "http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt</a>)</i></p>
+</body>
+</html>
