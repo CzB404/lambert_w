@@ -13,12 +13,14 @@
 #include <cmath>
 #include <boost/math/constants/constants.hpp>
 #include <boost/math/special_functions/lambert_w.hpp>
+#include <boost/multiprecision/cpp_bin_float.hpp>
 
 //using RealType = long double;
 //using IntegralType = int;
 
 typedef double RealType;
 typedef int IntegralType;
+typedef boost::multiprecision::cpp_bin_float_100 MultiPrec;
 
 RealType dist()
 {
@@ -45,6 +47,12 @@ int main()
 	std::cout << "W(1+0i,-1) = " << boost::math::lambert_w(std::complex<double>(1,0),-1) << std::endl;
 	std::cout << "W(42) = " << boost::math::lambert_w(42.) << std::endl;
 	std::cout << "W(42)*exp(W(42)) = " << boost::math::lambert_w(42.)*std::exp(boost::math::lambert_w(42.)) << std::endl;
+
+	MultiPrec x = 42;
+	MultiPrec w = boost::math::lambert_w(x);
+
+	std::cout << "W(42) (Multiprecision) = " << w << std::endl;
+
 
 	//std::random_device rd;
 	//std::default_random_engine rnd;//(rd());

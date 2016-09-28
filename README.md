@@ -7,9 +7,10 @@ https://en.wikipedia.org/wiki/Lambert_W_function
 
 For now the library is slowly being prepared to be submitted to the Boost review board.
 
-The library uses the C++11 standard and requires the compiler to support that standard.
+The library uses the C++03 standard and requires the compiler to support that standard.
 It also uses the Boost Math Constants library.
 
 The function itself can be called with `boost::math::lambert_w(ArgumentType z, IndexType k)`,
-where `ArgumentType` can be `float`, `double` or `long double`, and their `std::complex` variants.
+where `ArgumentType` can be any real number type, and `std::complex` numbers with
+template parameters `float`, `double` or `long double`.
 `IndexType` is expected to be an integer type.

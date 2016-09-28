@@ -34,10 +34,12 @@
 //#include <type_traits>
 #include <boost/math/special_functions/round.hpp>
 #include <boost/config.hpp>
-#include <boost/type_traits/is_arithmetic.hpp>
+//#include <boost/type_traits/is_arithmetic.hpp>
+#include <boost/type_traits/is_complex.hpp>
 #include <boost/array.hpp>
 #include <boost/typeof/typeof.hpp>
 #include <boost/math/constants/constants.hpp>
+#include <boost/math/special_functions/nonfinite_num_facets.hpp>
 //#include <boost/math/special_functions/factorials.hpp>
 
 namespace boost
@@ -49,47 +51,73 @@ namespace math
 	const std::size_t _lambw_mid_series_L = 8;
 	const std::size_t _lambw_sing_series_L = 10;
 
-	template<typename ConstantType>
-	const ConstantType _lambw_imaginary_unit()
+	template<typename CoeffType>
+	const CoeffType& _lambw_imaginary_unit()
 	{
-		return std::numeric_limits<ConstantType>::quiet_NaN();
+		using std::sqrt;
+		using std::abs;
+
+		static CoeffType z;
+		static const CoeffType i = sqrt(CoeffType((BOOST_TYPEOF(abs(z)))(-1.)));
+
+		return i;
 	}
 
-	template<>
-	const std::complex<float> _lambw_imaginary_unit<std::complex<float> >()
+	template<typename CoeffType>
+	CoeffType _lambw_complex_real(const CoeffType &z)
 	{
-		return std::complex<float>((float)0.,(float)1.);
+		return z;
 	}
 
-	template<>
-	const std::complex<double> _lambw_imaginary_unit<std::complex<double> >()
+	template<typename CoeffType>
+	CoeffType _lambw_complex_real(const std::complex<CoeffType> &z)
 	{
-		return std::complex<double>((double)0.,(double)1.);
+		return z.real();
 	}
 
-	template<>
-	const std::complex<long double> _lambw_imaginary_unit<std::complex<long double> >()
+	template<typename CoeffType>
+	CoeffType _lambw_complex_imag(const CoeffType &z)
 	{
-		return std::complex<long double>((long double)0.,(long double)1.);
+		return (CoeffType)0.;
 	}
 
-	template<typename ArgumentType, typename ConstantType, std::size_t L>
-	ArgumentType _lambw_series_sum(const ArgumentType &z, const boost::array<ConstantType,L> &c)
+	template<typename CoeffType>
+	CoeffType _lambw_complex_imag(const std::complex<CoeffType> &z)
 	{
-		ArgumentType sum = 1;
+		return z.imag();
+	}
+
+	template<typename CoeffType>
+	const CoeffType& _lambw_complex_one(const CoeffType &z)
+	{
+		static const CoeffType ans = (CoeffType)1.;
+		return ans;
+	}
+
+	template<typename CoeffType>
+	const std::complex<CoeffType>& _lambw_complex_one(const std::complex<CoeffType> &z)
+	{
+		static const std::complex<CoeffType> ans((CoeffType)1.,(CoeffType)0.);
+		return ans;
+	}
+
+	template<typename ArgumentType, typename CoeffType, std::size_t L>
+	ArgumentType _lambw_series_sum(const ArgumentType &z, const boost::array<CoeffType,L> &c)
+	{
+		ArgumentType sum = _lambw_complex_one(z);
 
 		for(std::size_t k = 0; k < L; ++k)
 		{
-			sum = ((ConstantType)1.)+c[L-k-1]*z*sum;
+			sum = ((CoeffType)1.)+c[L-k-1]*z*sum;
 		}
 
 		return sum;
 	}
 
-	template<typename ConstantType, std::size_t L>
-	boost::array<ConstantType,L> _lambw_coeff_array(ConstantType (&coeffs)(std::size_t) )
+	template<typename CoeffType, std::size_t L>
+	boost::array<CoeffType,L> _lambw_coeff_array(CoeffType (&coeffs)(std::size_t) )
 	{
-		boost::array<ConstantType,L> ans;
+		boost::array<CoeffType,L> ans;
 		for(std::size_t k = 0; k < L; ++k)
 		{
 			ans[k] = coeffs(k);
@@ -97,31 +125,36 @@ namespace math
 		return ans;
 	}
 
-	///constexpr-s in these require C++14
+	//constexpr-s in these require C++14
     template<typename ArgumentType>
 	/*BOOST_CONSTEXPR*/ ArgumentType _lambw_linstrips(const ArgumentType &z)
 	{
-		if(boost::is_arithmetic<ArgumentType>::value)
+		using std::abs;
+
+		if(!boost::is_complex<ArgumentType>::value)
 		{
 			return z;
 		}
 		else
 		{
-			return z-boost::math::constants::two_pi<BOOST_TYPEOF(std::real(z))>()
-			*_lambw_imaginary_unit<ArgumentType>()*boost::math::round(std::imag(z)/boost::math::constants::two_pi<BOOST_TYPEOF(std::real(z))>());
+			return z-boost::math::constants::two_pi<BOOST_TYPEOF(abs(z))>()
+			*_lambw_imaginary_unit<ArgumentType>()*boost::math::round(_lambw_complex_imag(z)/boost::math::constants::two_pi<BOOST_TYPEOF(abs(z))>());
 		}
 	}
 
 	template<typename ArgumentType>
 	ArgumentType _lambw_test_s(const ArgumentType &z, const ArgumentType &w)
 	{
-		if(boost::is_arithmetic<ArgumentType>::value)
+		using std::log;
+		using std::abs;
+
+		if(_lambw_complex_real(z) < 0.)
 		{
-			return _lambw_linstrips(std::log(std::abs(w))+w-std::log(std::abs(z)));
+			return _lambw_linstrips(log(-w)+w-log(-z));
 		}
 		else
 		{
-			return _lambw_linstrips(std::log(w)+w-std::log(z));
+			return _lambw_linstrips(log(w)+w-log(z));
 		}
 	}
 
@@ -133,32 +166,42 @@ namespace math
 	}
 	*/
 
-	template<typename ArgumentType>
-	int _lambw_test_score(const ArgumentType &z, const ArgumentType &w)
+	template<typename ArgumentType, typename CoeffType>
+	CoeffType _lambw_test_score(const ArgumentType &z, const ArgumentType &w)
 	{
-		BOOST_TYPEOF(std::real(z)) score = -std::log10(std::abs(_lambw_test_s(z,w)));
+		using std::abs;
+		using std::log10;
 
-		if(score == std::numeric_limits<BOOST_TYPEOF(std::real(z))>::infinity())
+		return -log10(abs(_lambw_test_s(z,w)));
+
+		//Abandoned integer scoring
+		/*
+		if(score == std::numeric_limits<BOOST_TYPEOF(abs(z))>::infinity())
 		{
 			return std::numeric_limits<int>::max();
 		}
 		else
 		{
-			return (int)boost::math::round(score);
+			return (int)round(score);
 		}
+		*/
 	}
 
-	template<typename ConstantType>
-    /*BOOST_CONSTEXPR*/ ConstantType _lambw_tay_coeffs(std::size_t k)
+	template<typename CoeffType>
+    /*BOOST_CONSTEXPR*/ CoeffType _lambw_tay_coeffs(std::size_t k)
     {
-    	ConstantType n = (ConstantType)(k+1);
-    	return (-std::pow(((n+1)/n),n-1));
+    	using std::pow;
+
+    	CoeffType n = (CoeffType)(k+1);
+    	return (-pow(((n+1)/n),n-1));
     }
 
-    template<typename ConstantType>
-    /*BOOST_CONSTEXPR*/ ConstantType _lambw_laur_coeffs(std::size_t k)
+    template<typename CoeffType>
+    /*BOOST_CONSTEXPR*/ CoeffType _lambw_laur_coeffs(std::size_t k)
     {
-    	ConstantType n = (ConstantType)k;
+    	using std::pow;
+
+    	CoeffType n = (CoeffType)k;
     	switch(k)
     	{
 		case 0:
@@ -168,79 +211,39 @@ namespace math
 			return -0.5;
 			break;
 		default:
-			return std::pow(n/(n-(ConstantType)1.),n)*((ConstantType)1.-n)/(n+(ConstantType)1.);
+			return pow(n/(n-(CoeffType)1.),n)*((CoeffType)1.-n)/(n+(CoeffType)1.);
 			break;
     	}
     }
 
-	template<typename ConstantType>
-	boost::array<ConstantType,_lambw_series_L> _lw_tc();
-
-	const boost::array<float,_lambw_series_L> _lw_tc_float = _lambw_coeff_array<float,_lambw_series_L>(_lambw_tay_coeffs<float>);
-
-	template<>
-	boost::array<float,_lambw_series_L> _lw_tc<float>()
+	template<typename CoeffType>
+	const boost::array<CoeffType,_lambw_series_L>& _lw_tc()
 	{
-		return _lw_tc_float;
+		static const boost::array<CoeffType,_lambw_series_L> ans = _lambw_coeff_array<CoeffType,_lambw_series_L>(_lambw_tay_coeffs<CoeffType>);
+		return ans;
 	}
 
-	const boost::array<double,_lambw_series_L> _lw_tc_double = _lambw_coeff_array<double,_lambw_series_L>(_lambw_tay_coeffs<double>);
-
-	template<>
-	boost::array<double,_lambw_series_L> _lw_tc<double>()
+	template<typename CoeffType>
+	const boost::array<CoeffType,_lambw_series_L>& _lw_lc()
 	{
-		return _lw_tc_double;
+		static const boost::array<CoeffType,_lambw_series_L> ans = _lambw_coeff_array<CoeffType,_lambw_series_L>(_lambw_laur_coeffs<CoeffType>);
+		return ans;
 	}
 
-	const boost::array<long double,_lambw_series_L> _lw_tc_long_double = _lambw_coeff_array<long double,_lambw_series_L>(_lambw_tay_coeffs<long double>);
-
-	template<>
-	boost::array<long double,_lambw_series_L> _lw_tc<long double>()
-	{
-		return _lw_tc_long_double;
-	}
-
-	template<typename ConstantType>
-	boost::array<ConstantType,_lambw_series_L> _lw_lc();
-
-	const boost::array<float,_lambw_series_L> _lw_lc_float = _lambw_coeff_array<float,_lambw_series_L>(_lambw_laur_coeffs<float>);
-
-	template<>
-	boost::array<float,_lambw_series_L> _lw_lc<float>()
-	{
-		return _lw_lc_float;
-	}
-
-	const boost::array<double,_lambw_series_L> _lw_lc_double = _lambw_coeff_array<double,_lambw_series_L>(_lambw_laur_coeffs<double>);
-
-	template<>
-	boost::array<double,_lambw_series_L> _lw_lc<double>()
-	{
-		return _lw_lc_double;
-	}
-
-	const boost::array<long double,_lambw_series_L> _lw_lc_long_double = _lambw_coeff_array<long double,_lambw_series_L>(_lambw_laur_coeffs<long double>);
-
-	template<>
-	boost::array<long double,_lambw_series_L> _lw_lc<long double>()
-	{
-		return _lw_lc_long_double;
-	}
-
-	template<typename ArgumentType,typename ConstantType>
+	template<typename ArgumentType,typename CoeffType>
 	ArgumentType _lambw_tay(const ArgumentType &z)
 	{
-		return z*_lambw_series_sum(z,_lw_tc<ConstantType>());
+		return z*_lambw_series_sum(z,_lw_tc<CoeffType>());
 	}
 
-	template<typename ArgumentType,typename ConstantType>
+	template<typename ArgumentType,typename CoeffType>
 	ArgumentType _lambw_laur(const ArgumentType &z)
 	{
-		return z/_lambw_series_sum(z,_lw_lc<ConstantType>());
+		return z/_lambw_series_sum(z,_lw_lc<CoeffType>());
 	}
 
 	template<typename IntegralType>
-	/*BOOST_CONSTEXPR*/ IntegralType _stirling(IntegralType n, IntegralType k)
+	/*BOOST_CONSTEXPR*/ IntegralType _lambw_stirling(IntegralType n, IntegralType k)
 	{
 		if( n == 0 || k == 0)
 		{
@@ -260,19 +263,22 @@ namespace math
 	}
 
 	template<typename ArgumentType, typename IndexType>
-	ArgumentType _log_k(const ArgumentType &z, IndexType k = 0)
+	ArgumentType _log_k(const ArgumentType &z, IndexType k)
 	{
-		if(boost::is_arithmetic<ArgumentType>::value)
+		using std::log;
+		using std::abs;
+
+		if(!boost::is_complex<ArgumentType>::value)
 		{
-			return (k==0)?(std::log(z)):(std::numeric_limits<ArgumentType>::quiet_NaN());
+			return (k==0)?(log(z)):(std::numeric_limits<ArgumentType>::quiet_NaN());
 		}
 		else
 		{
-			return std::log(z) + (boost::math::constants::two_pi<BOOST_TYPEOF(std::real(z))>()*k)*_lambw_imaginary_unit<ArgumentType>();
+			return log(z) + (boost::math::constants::two_pi<BOOST_TYPEOF(abs(z))>()*k)*_lambw_imaginary_unit<ArgumentType>();
 		}
 	}
 
-	template<typename ArgumentType, typename ConstantType>
+	template<typename ArgumentType, typename CoeffType>
 	ArgumentType _lambw_asy_body(const ArgumentType &L1, const ArgumentType &L2)
 	{
 		ArgumentType ans = L1-L2;
@@ -281,74 +287,70 @@ namespace math
 		{
 			for(std::size_t m = 1; m <= l+1; ++m)
 			{
-				ans+=std::pow(-1.,l%2)*_stirling(l+m,l+1)/boost::math::factorial(m)*std::pow(L1,-(ConstantType)l-(ConstantType)m)*std::pow(L2,(ConstantType)m);
+				ans+=std::pow(-1.,l%2)*_stirling(l+m,l+1)/boost::math::factorial(m)*std::pow(L1,-(CoeffType)l-(CoeffType)m)*std::pow(L2,(CoeffType)m);
 			}
 		}
 		*/
-		ans += L2/L1 + L2*(((ConstantType)(-2.))+L2)/(ConstantType)2./L1/L1 + L2*((ConstantType)6.-(ConstantType)9.*L2+(ConstantType)2.*L2*L2)/(ConstantType)6./L1/L1/L1
-			+ L2*((ConstantType)(-12.)+(ConstantType)36.*L2-(ConstantType)22.*L2*L2+(ConstantType)3.*L2*L2*L2)/(ConstantType)12./L1/L1/L1/L1;
+		ans += L2/L1 + L2*(((CoeffType)(-2.))+L2)/(CoeffType)2./L1/L1 + L2*((CoeffType)6.-(CoeffType)9.*L2+(CoeffType)2.*L2*L2)/(CoeffType)6./L1/L1/L1
+			+ L2*((CoeffType)(-12.)+(CoeffType)36.*L2-(CoeffType)22.*L2*L2+(CoeffType)3.*L2*L2*L2)/(CoeffType)12./L1/L1/L1/L1;
 
 
 		return ans;
 	}
 
-	template<typename ArgumentType, typename ConstantType, typename IndexType>
+	template<typename ArgumentType, typename CoeffType, typename IndexType>
 	ArgumentType _lambw_asy(const ArgumentType &z, IndexType k = 0)
 	{
-		ArgumentType L1 = _log_k(z,k);
-		ArgumentType L2 = std::log(L1);
+		using std::log;
 
-		return _lambw_asy_body<ArgumentType,ConstantType>(L1,L2);
+		ArgumentType L1 = _log_k(z,k);
+		ArgumentType L2 = log(L1);
+
+		return _lambw_asy_body<ArgumentType,CoeffType>(L1,L2);
 	}
 
-	template<typename ArgumentType, typename ConstantType>
+	template<typename ArgumentType, typename CoeffType>
 	ArgumentType _lambw_N1(const ArgumentType &z)
 	{
-		ArgumentType L1 = std::log(-z);
-		ArgumentType L2 = std::log(-L1);
+		using std::log;
 
-		return _lambw_asy_body<ArgumentType,ConstantType>(L1,L2);
+		ArgumentType L1 = log(-z);
+		ArgumentType L2 = log(-L1);
+
+		return _lambw_asy_body<ArgumentType,CoeffType>(L1,L2);
 	}
 
-	template<typename ConstantType>
-	boost::array<ConstantType,_lambw_series_L> _lw_midc();
-
-	const boost::array<float,_lambw_series_L> _lw_midc_float = {(1.f/2.f), (1.f/8.f),-(1.f/12.f),(1.f/16.f),-(13.f/20.f),-(47.f/312.f),(73.f/1316.f),-(2447.f/2336.f)};
-
-	template<>
-	boost::array<float,_lambw_series_L> _lw_midc<float>()
+	template<typename CoeffType>
+	const boost::array<CoeffType,_lambw_series_L>& _lw_midc()
 	{
-		return _lw_midc_float;
+		static const boost::array<CoeffType,_lambw_series_L> ans = {
+			((CoeffType)1./(CoeffType)2.),
+			((CoeffType)1./(CoeffType)8.),
+			-((CoeffType)1./(CoeffType)12.),
+			((CoeffType)1./(CoeffType)16.),
+			-((CoeffType)13./(CoeffType)20.),
+			-((CoeffType)47./(CoeffType)312.),
+			((CoeffType)73./(CoeffType)1316.),
+			-((CoeffType)2447./(CoeffType)2336.)
+		};
+
+		return ans;
 	}
 
-	const boost::array<double,_lambw_series_L> _lw_midc_double = {(1./2.), (1./8.),-(1./12.),(1./16.),-(13./20.),-(47./312.),(73./1316.),-(2447./2336.)};
-
-	template<>
-	boost::array<double,_lambw_series_L> _lw_midc<double>()
-	{
-		return _lw_midc_double;
-	}
-
-	const boost::array<long double,_lambw_series_L> _lw_midc_long_double = {(1.l/2.l), (1.l/8.l),-(1.l/12.l),(1.l/16.l),-(13.l/20.l),-(47.l/312.l),(73.l/1316.l),-(2447.l/2336.l)};
-
-	template<>
-	boost::array<long double,_lambw_series_L> _lw_midc<long double>()
-	{
-		return _lw_midc_long_double;
-	}
-
-	template<typename ArgumentType, typename ConstantType>
+	template<typename ArgumentType, typename CoeffType>
 	ArgumentType _lambw_mid(const ArgumentType &z)
 	{
-		ArgumentType x = std::log(z)-(ConstantType)1.;
-		return _lambw_series_sum(x,_lw_midc<ConstantType>());
+		using std::log;
+
+		ArgumentType x = log(z)-(CoeffType)1.;
+		return _lambw_series_sum(x,_lw_midc<CoeffType>());
 	}
 
-	template<typename ConstantType>
-	/*BOOST_CONSTEXPR*/ ConstantType _lambw_sing_coeffs_mu(std::size_t k);
+	template<typename CoeffType>
+	/*BOOST_CONSTEXPR*/ CoeffType _lambw_sing_coeffs_mu(std::size_t k);
 
-	template<typename ConstantType>
-	/*BOOST_CONSTEXPR*/ ConstantType _lambw_sing_coeffs_alpha(std::size_t k)
+	template<typename CoeffType>
+	/*BOOST_CONSTEXPR*/ CoeffType _lambw_sing_coeffs_alpha(std::size_t k)
 	{
 		if(k == 0)
 		{
@@ -360,17 +362,17 @@ namespace math
 		}
 		else
 		{
-			ConstantType sum = 0;
+			CoeffType sum = 0;
 			for(std::size_t j = 2; j <= (k-1); ++j)
 			{
-				sum+=_lambw_sing_coeffs_mu<ConstantType>(j)*_lambw_sing_coeffs_mu<ConstantType>(k+1-j);
+				sum+=_lambw_sing_coeffs_mu<CoeffType>(j)*_lambw_sing_coeffs_mu<CoeffType>(k+1-j);
 			}
 			return sum;
 		}
 	}
 
-	template<typename ConstantType>
-	/*BOOST_CONSTEXPR*/ ConstantType _lambw_sing_coeffs_mu(std::size_t k)
+	template<typename CoeffType>
+	/*BOOST_CONSTEXPR*/ CoeffType _lambw_sing_coeffs_mu(std::size_t k)
 	{
 		if(k == 0)
 		{
@@ -382,66 +384,55 @@ namespace math
 		}
 		else
 		{
-			return (_lambw_sing_coeffs_mu<ConstantType>(k-2)/2
-					+_lambw_sing_coeffs_alpha<ConstantType>(k-2)/4)*(k-1)/(k+1)
-					-_lambw_sing_coeffs_alpha<ConstantType>(k)/2
-					-_lambw_sing_coeffs_mu<ConstantType>(k-1)/(k+1);
+			return (_lambw_sing_coeffs_mu<CoeffType>(k-2)/2
+					+_lambw_sing_coeffs_alpha<CoeffType>(k-2)/4)*(k-1)/(k+1)
+					-_lambw_sing_coeffs_alpha<CoeffType>(k)/2
+					-_lambw_sing_coeffs_mu<CoeffType>(k-1)/(k+1);
 		}
 	}
 
-	template<typename ConstantType>
-	/*BOOST_CONSTEXPR*/ ConstantType _lambw_sing_coeffs(std::size_t k)
+	template<typename CoeffType>
+	/*BOOST_CONSTEXPR*/ CoeffType _lambw_sing_coeffs(std::size_t k)
 	{
-		ConstantType ans = _lambw_sing_coeffs_mu<ConstantType>(k+1)/_lambw_sing_coeffs_mu<ConstantType>(k);
+		CoeffType ans = _lambw_sing_coeffs_mu<CoeffType>(k+1)/_lambw_sing_coeffs_mu<CoeffType>(k);
 		return ans;
 	}
 
-	template<typename ConstantType>
-	boost::array<ConstantType,_lambw_series_L> _lw_singc();
-
-	const boost::array<float,_lambw_series_L> _lw_singc_float = _lambw_coeff_array<float,_lambw_series_L>(_lambw_sing_coeffs<float>);
-
-	template<>
-	boost::array<float,_lambw_series_L> _lw_singc<float>()
+	template<typename CoeffType>
+	const boost::array<CoeffType,_lambw_series_L>& _lw_singc()
 	{
-		return _lw_singc_float;
+		static const boost::array<CoeffType,_lambw_series_L> ans = _lambw_coeff_array<CoeffType,_lambw_series_L>(_lambw_sing_coeffs<CoeffType>);
+		return ans;
 	}
 
-	const boost::array<double,_lambw_series_L> _lw_singc_double = _lambw_coeff_array<double,_lambw_series_L>(_lambw_sing_coeffs<double>);
-
-	template<>
-	boost::array<double,_lambw_series_L> _lw_singc<double>()
-	{
-		return _lw_singc_double;
-	}
-
-	const boost::array<long double,_lambw_series_L> _lw_singc_long_double = _lambw_coeff_array<long double,_lambw_series_L>(_lambw_sing_coeffs<long double>);
-
-	template<>
-	boost::array<long double,_lambw_series_L> _lw_singc<long double>()
-	{
-		return _lw_singc_long_double;
-	}
-
-	template<typename ArgumentType, typename ConstantType, typename IndexType>
+	template<typename ArgumentType, typename CoeffType, typename IndexType>
 	ArgumentType _lambw_sing(const ArgumentType &z, IndexType k)
 	{
+		using std::pow;
+		using std::sqrt;
+		using std::exp;
+		using std::log;
+
 		ArgumentType p;
-		if(std::real(z) >= 0)
+		if(_lambw_complex_real(z) >= 0)
 		{
-			p = ((ConstantType)std::pow(-1.,k%2))*std::sqrt((ConstantType)2.*(std::exp((ConstantType)1.+std::log(z))+(ConstantType)1.));
+			p = ((CoeffType)pow(-1.,k%2))*sqrt((CoeffType)2.*(exp((CoeffType)1.+log(z))+(CoeffType)1.));
 		}
 		else
 		{
-			p = ((ConstantType)std::pow(-1.,k%2))*std::sqrt((ConstantType)2.*(-std::exp((ConstantType)1.+std::log(-z))+(ConstantType)1.));
+			p = ((CoeffType)pow(-1.,k%2))*sqrt((CoeffType)2.*(-exp((CoeffType)1.+log(-z))+(CoeffType)1.));
 		}
-		return -_lambw_series_sum(p,_lw_singc<ConstantType>());
+		return -_lambw_series_sum(p,_lw_singc<CoeffType>());
 	}
 
-	template<typename ArgumentType, typename ConstantType, typename IndexType>
+	template<typename ArgumentType, typename CoeffType, typename IndexType>
 	ArgumentType _lambw_iter_frit(const ArgumentType &x, IndexType k, const ArgumentType &Wn)
 	{
-		if((k==0||k==1||k==-1)&&(x==(ConstantType)0.||x==-(ConstantType)std::exp(-1.)))
+		using std::log;
+		using std::abs;
+		using std::exp;
+
+		if((k==0||k==1||k==-1)&&(x==(CoeffType)0.||x==-exp((CoeffType)(-1.))))
 		{
 			return Wn;
 		}
@@ -451,87 +442,100 @@ namespace math
 
 			if(k==0)
 			{
-				if(std::imag(x)==0 &&(std::real(x)<=0)&&(std::real(x)>=-(ConstantType)std::exp(-1.l)) )
+				if(_lambw_complex_imag(x)==0
+					&&(_lambw_complex_real(x)<=0)
+					&&(_lambw_complex_real(x)>=-exp((CoeffType)(-1.))) )
 				{
-					z_n = std::log(std::abs(x))-std::log(std::abs(Wn))-Wn;
+					z_n = log(abs(x))-log(abs(Wn))-Wn;
 				}
 				else
 				{
-					z_n = std::log(x)-std::log(Wn)-Wn;
+					z_n = log(x)-log(Wn)-Wn;
 				}
 			}
 			else
 			{
-				if((k==-1)&&(std::imag(x)==0)&&(std::real(x)<=0)&&(std::real(x)>=-(ConstantType)std::exp(-1.l)))
+				if((k==-1)&&(_lambw_complex_imag(x)==0)
+					&&(_lambw_complex_real(x)<=0)
+					&&(_lambw_complex_real(x)>=-(CoeffType)std::exp(-1.l)))
 				{
-					z_n = std::log(std::abs(x))-std::log(std::abs(Wn))-Wn;
+					z_n = log(abs(x))-log(abs(Wn))-Wn;
 				}
 				else
 				{
-					z_n = _log_k(x,k)+std::log((ConstantType)1./Wn)-Wn;
+					z_n = _log_k(x,k)+log((CoeffType)1./Wn)-Wn;
 				}
 			}
 
-			ArgumentType q_n=(ConstantType)2.*((ConstantType)1.+Wn)*((ConstantType)1.+Wn+(ConstantType)2./(ConstantType)3.*z_n);
+			ArgumentType q_n=(CoeffType)2.*((CoeffType)1.+Wn)*((CoeffType)1.+Wn+(CoeffType)2./(CoeffType)3.*z_n);
 
-			ArgumentType e_n=z_n/((ConstantType)1.+Wn)*(q_n-z_n)/(q_n-(ConstantType)2.*z_n);
+			ArgumentType e_n=z_n/((CoeffType)1.+Wn)*(q_n-z_n)/(q_n-(CoeffType)2.*z_n);
 
-			return Wn*((ConstantType)1.+e_n);
+			return Wn*((CoeffType)1.+e_n);
 		}
 	}
 
-	template<typename ArgumentType, typename ConstantType, typename IndexType>
+	template<typename ArgumentType, typename CoeffType, typename IndexType>
 	ArgumentType _lambw_iter_newt_nolog(const ArgumentType &x, const ArgumentType &fn)
 	{
-		return fn*((ConstantType)1.-(ConstantType)1./((ConstantType)1.+fn))+x/((ConstantType)1.+fn)*std::exp(-fn);
+		using std::exp;
+
+		return fn*((CoeffType)1.-(CoeffType)1./((CoeffType)1.+fn))+x/((CoeffType)1.+fn)*exp(-fn);
 	}
 
-	template<typename ArgumentType, typename ConstantType, typename IndexType>
+	template<typename ArgumentType, typename CoeffType, typename IndexType>
 	ArgumentType _lambw_iter_newt_wlog(const ArgumentType &x, const ArgumentType &fn)
 	{
-		if(std::real(x)<0)
+		using std::exp;
+		using std::log;
+
+		if(_lambw_complex_real(x)<0)
 		{
-			if(std::real(fn)<0)
+			if(_lambw_complex_real(fn)<0)
 			{
-				return fn-(ConstantType)1./((ConstantType)1.+(ConstantType)1./fn)+std::exp(std::log(-x)-std::log(-(ConstantType)1.-fn)-(fn));
+				return fn-(CoeffType)1./((CoeffType)1.+(CoeffType)1./fn)+exp(log(-x)-log(-(CoeffType)1.-fn)-(fn));
 			}
 			else
 			{
-				return fn-(ConstantType)1./((ConstantType)1.+(ConstantType)1./fn)-std::exp(std::log(-x)-std::log((ConstantType)1.+fn)-(fn));
+				return fn-(CoeffType)1./((CoeffType)1.+(CoeffType)1./fn)-exp(log(-x)-log((CoeffType)1.+fn)-(fn));
 			}
 		}
 		else
 		{
-			if(std::real(fn)<0)
+			if(_lambw_complex_real(fn)<0)
 			{
-				return fn-(ConstantType)1./((ConstantType)1.+(ConstantType)1./fn)-std::exp(std::log(x)-std::log(-(ConstantType)1.-fn)-(fn));
+				return fn-(CoeffType)1./((CoeffType)1.+(CoeffType)1./fn)-exp(log(x)-log(-(CoeffType)1.-fn)-(fn));
 			}
 			else
 			{
-				return fn-(ConstantType)1./((ConstantType)1.+(ConstantType)1./fn)+std::exp(std::log(x)-std::log((ConstantType)1.+fn)-(fn));
+				return fn-(CoeffType)1./((CoeffType)1.+(CoeffType)1./fn)+exp(log(x)-log((CoeffType)1.+fn)-(fn));
 			}
 		}
 	}
 
-	template<typename ArgumentType, typename ConstantType, typename IndexType>
+	template<typename ArgumentType, typename CoeffType, typename IndexType>
 	ArgumentType _lambw_iter_newt(const ArgumentType &x, IndexType k, const ArgumentType &fn)
 	{
-		if(((((k==0)||(k==-1))&&(std::imag(x)>=0))||((k==1)&&(std::imag(x)<0)))
-			&&(std::abs(x+(ConstantType)std::exp(-1.l))<7e-4))
+		using std::abs;
+		using std::exp;
+
+		if(((((k==0)||(k==-1))&&(_lambw_complex_imag(x)>=0))
+			||((k==1)&&(_lambw_complex_imag(x)<0)))
+			&&(abs(x+exp((CoeffType)(-1.)))<7e-4))
 		{
 			return fn;
 		}
 		else
 		{
-			if(((k==0)&&(std::abs(x)<(ConstantType)std::exp(-1.l)))
-				||(k==-1&&std::imag(x)>=0&&std::abs(x+(ConstantType)std::exp(-1.l))<0.3)
-				||(k==1&&std::imag(x)<0&&std::abs(x+(ConstantType)std::exp(-1.l))<0.3))
+			if(((k==0)&&(abs(x)<exp((CoeffType)(-1.))))
+				||(k==-1&&_lambw_complex_imag(x)>=0&&abs(x+exp((CoeffType)(-1.)))<0.3)
+				||(k==1&&_lambw_complex_imag(x)<0&&abs(x+exp((CoeffType)(-1.)))<0.3))
 			{
-				return _lambw_iter_newt_nolog<ArgumentType,ConstantType,IndexType>(x,fn);
+				return _lambw_iter_newt_nolog<ArgumentType,CoeffType,IndexType>(x,fn);
 			}
 			else
 			{
-				return _lambw_iter_newt_wlog<ArgumentType,ConstantType,IndexType>(x,fn);
+				return _lambw_iter_newt_wlog<ArgumentType,CoeffType,IndexType>(x,fn);
 			}
 		}
 	}
@@ -558,28 +562,31 @@ namespace math
 	}
 	*/
 
-	template<typename ArgumentType, typename ConstantType, typename IndexType, int Precision>
+	template<typename ArgumentType, typename CoeffType, typename IndexType>
 	ArgumentType _lambw_raw(const ArgumentType &z, IndexType k = 0)
 	{
+		using std::abs;
+		using std::exp;
+
 		ArgumentType w;
 
-		ConstantType z_imag = std::imag(z);
+		CoeffType z_imag = _lambw_complex_imag(z);
 
 		if(k==-1)
 		{
-			if(std::abs(z+(ConstantType)0.04)<=0.14 && z_imag>=0)
+			if(abs(z+(CoeffType)0.04)<=0.14 && z_imag>=0)
 			{
-				w = _lambw_N1<ArgumentType,ConstantType>(z);
+				w = _lambw_N1<ArgumentType,CoeffType>(z);
 			}
 			else
 			{
-				if(abs(z+(ConstantType)std::exp(-1.l))<0.3 && z_imag>=0)
+				if(abs(z+exp((CoeffType)(-1.)))<0.3 && z_imag>=0)
 				{
-					w = _lambw_sing<ArgumentType,ConstantType,IndexType>(z,k);
+					w = _lambw_sing<ArgumentType,CoeffType,IndexType>(z,k);
 				}
 				else
 				{
-					w = _lambw_asy<ArgumentType,ConstantType,IndexType>(z,-1);
+					w = _lambw_asy<ArgumentType,CoeffType,IndexType>(z,-1);
 				}
 			}
 		}
@@ -587,19 +594,19 @@ namespace math
 		{
 			if(k==1)
 			{
-				if(std::abs(z+(ConstantType)0.04)<=0.14 && z_imag<0)
+				if(abs(z+(CoeffType)0.04)<=0.14 && z_imag<0)
 				{
-					w = _lambw_N1<ArgumentType,ConstantType>(z);
+					w = _lambw_N1<ArgumentType,CoeffType>(z);
 				}
 				else
 				{
-					if(std::abs(z+(ConstantType)std::exp(-1.l))<0.3 && z_imag<0)
+					if(abs(z+exp((CoeffType)(-1.)))<0.3 && z_imag<0)
 					{
-						w = _lambw_sing<ArgumentType,ConstantType,IndexType>(z,k);
+						w = _lambw_sing<ArgumentType,CoeffType,IndexType>(z,k);
 					}
 					else
 					{
-						w = _lambw_asy<ArgumentType,ConstantType,IndexType>(z,1);
+						w = _lambw_asy<ArgumentType,CoeffType,IndexType>(z,1);
 					}
 				}
 			}
@@ -607,29 +614,29 @@ namespace math
 			{
 				if(k!=0)
 				{
-					w = _lambw_asy<ArgumentType,ConstantType,IndexType>(z,k);
+					w = _lambw_asy<ArgumentType,CoeffType,IndexType>(z,k);
 				}
 				else
 				{
-					if(std::abs(z-(ConstantType)0.02)<0.28)
+					if(abs(z-(CoeffType)0.02)<0.28)
 					{
-						w = _lambw_laur<ArgumentType,ConstantType>(z);
+						w = _lambw_laur<ArgumentType,CoeffType>(z);
 					}
 					else
 					{
-						if(std::abs(z+(ConstantType)std::exp(-1.))<0.3)
+						if(abs(z+exp((CoeffType)(-1.)))<0.3)
 						{
-							w = _lambw_sing<ArgumentType,ConstantType,IndexType>(z,k);
+							w = _lambw_sing<ArgumentType,CoeffType,IndexType>(z,k);
 						}
 						else
 						{
-							if(std::abs(z-(ConstantType)8.)<13)
+							if(abs(z-(CoeffType)8.)<13)
 							{
-								w = _lambw_mid<ArgumentType,ConstantType>(z);
+								w = _lambw_mid<ArgumentType,CoeffType>(z);
 							}
 							else
 							{
-								w = _lambw_asy<ArgumentType,ConstantType,IndexType>(z,0);
+								w = _lambw_asy<ArgumentType,CoeffType,IndexType>(z,0);
 							}
 						}
 					}
@@ -641,68 +648,92 @@ namespace math
 		/*
 		if(k == 0)
 		{
-			boost::array<ArgumentType,4> approxes = {_lambw_laur<ArgumentType,ConstantType>(z),
-												_lambw_sing<ArgumentType,ConstantType,IndexType>(z,0),
-												_lambw_mid<ArgumentType,ConstantType>(z),
-												_lambw_asy<ArgumentType,ConstantType,IndexType>(z,0)};
+			boost::array<ArgumentType,4> approxes = {_lambw_laur<ArgumentType,CoeffType>(z),
+												_lambw_sing<ArgumentType,CoeffType,IndexType>(z,0),
+												_lambw_mid<ArgumentType,CoeffType>(z),
+												_lambw_asy<ArgumentType,CoeffType,IndexType>(z,0)};
 			w = _lambw_best_approx(z,approxes);
 		}
 		else if(k == -1)
 		{
-			if(std::imag(z) >= 0)
+			if(_lambw_complex_imag(z) >= 0)
 			{
-				boost::array<ArgumentType,3> approxes = {_lambw_sing<ArgumentType,ConstantType,IndexType>(z,-1),
-													_lambw_N1<ArgumentType,ConstantType>(z),
-													_lambw_asy<ArgumentType,ConstantType,IndexType>(z,-1)};
+				boost::array<ArgumentType,3> approxes = {_lambw_sing<ArgumentType,CoeffType,IndexType>(z,-1),
+													_lambw_N1<ArgumentType,CoeffType>(z),
+													_lambw_asy<ArgumentType,CoeffType,IndexType>(z,-1)};
 				w = _lambw_best_approx(z,approxes);
 			}
 			else
 			{
-				w = _lambw_asy<ArgumentType,ConstantType,IndexType>(z,-1);
+				w = _lambw_asy<ArgumentType,CoeffType,IndexType>(z,-1);
 			}
 		}
 		else if(k == 1)
 		{
-			if(std::imag(z) < 0)
+			if(_lambw_complex_imag(z) < 0)
 			{
-				boost::array<ArgumentType,3> approxes = {_lambw_sing<ArgumentType,ConstantType,IndexType>(z,1),
-													_lambw_N1<ArgumentType,ConstantType>(z),
-													_lambw_asy<ArgumentType,ConstantType,IndexType>(z,1)};
+				boost::array<ArgumentType,3> approxes = {_lambw_sing<ArgumentType,CoeffType,IndexType>(z,1),
+													_lambw_N1<ArgumentType,CoeffType>(z),
+													_lambw_asy<ArgumentType,CoeffType,IndexType>(z,1)};
 				w = _lambw_best_approx(z,approxes);
 			}
 			else
 			{
-				w = _lambw_asy<ArgumentType,ConstantType,IndexType>(z,1);
+				w = _lambw_asy<ArgumentType,CoeffType,IndexType>(z,1);
 			}
 		}
 		else
 		{
-			w = _lambw_asy<ArgumentType,ConstantType,IndexType>(z,k);
+			w = _lambw_asy<ArgumentType,CoeffType,IndexType>(z,k);
 		}
 		*/
 
-		if( (boost::math::isnan(std::real(w))||boost::math::isnan(std::imag(w))) || (std::real(z)==0 && std::imag(z)==0) )
+		if( (boost::math::isnan(_lambw_complex_real(w))
+			||boost::math::isnan(_lambw_complex_imag(w)))
+			|| (_lambw_complex_real(z)==0
+			&& _lambw_complex_imag(z)==0) )
 		{
 			return w;
 		}
 
-		int prec = _lambw_test_score(z,w);
+		CoeffType prec = _lambw_test_score<ArgumentType,CoeffType>(z,w);
 
-		if(prec >= Precision)
+		while(prec <= 4)
 		{
-			return w;
+			w = _lambw_iter_newt<ArgumentType,CoeffType,IndexType>(z,k,w);
+			prec = _lambw_test_score<ArgumentType,CoeffType>(z,w);
 		}
 
-		while(prec <= Precision/4)
-		{
-			w = _lambw_iter_newt<ArgumentType,ConstantType,IndexType>(z,k,w);
-			prec = _lambw_test_score(z,w);
-		}
+		CoeffType prec_prev;
+		ArgumentType w_prev;
 
-		return _lambw_iter_frit<ArgumentType,ConstantType,IndexType>(z,k,w);
+		do
+		{
+			prec_prev = prec;
+			w_prev = w;
+			w = _lambw_iter_frit<ArgumentType,CoeffType,IndexType>(z,k,w);
+			prec = _lambw_test_score<ArgumentType,CoeffType>(z,w);
+		}
+		while(prec > prec_prev);
+
+		return w_prev;
 	}
 
-	float lambert_w(float z, int k = 0)
+	template<typename ArgumentType>
+	ArgumentType lambert_w(ArgumentType z)
+	{
+		if( (z == std::numeric_limits<ArgumentType>::infinity()) && (z > 0) )
+		{
+			return std::numeric_limits<ArgumentType>::infinity();
+		}
+		else
+		{
+			return _lambw_raw<ArgumentType,ArgumentType,int>(z, 0);
+		}
+	}
+
+	template<typename ArgumentType, typename IndexType>
+	ArgumentType lambert_w(ArgumentType z, IndexType k)
 	{
 		if( (k == 0) || (k == -1) )
 		{
@@ -710,145 +741,56 @@ namespace math
 			{
 				if(z == 0)
 				{
-					return -std::numeric_limits<float>::infinity();
+					return -std::numeric_limits<ArgumentType>::infinity();
 				}
 				else if( z < -std::exp(-1.f) || z > 0 )
 				{
-					return std::numeric_limits<float>::quiet_NaN();
+					return std::numeric_limits<ArgumentType>::quiet_NaN();
 				}
 				else
 				{
-					return _lambw_raw<float,float,int,8>(z, k);
+					return _lambw_raw<ArgumentType,ArgumentType,IndexType>(z, k);
 				}
 			}
-			else if( (k == 0) && (std::isinf(z)) && (z > 0) )
+			else if( (k == 0) && (z == std::numeric_limits<ArgumentType>::infinity()) && (z > 0) )
 			{
-				return std::numeric_limits<float>::infinity();
+				return std::numeric_limits<ArgumentType>::infinity();
 			}
 			else
 			{
-				return _lambw_raw<float,float,int,8>(z, k);
+				return _lambw_raw<ArgumentType,ArgumentType,IndexType>(z, k);
 			}
 		}
 		else
 		{
-			return std::numeric_limits<float>::quiet_NaN();
+			return std::numeric_limits<ArgumentType>::quiet_NaN();
 		}
 	}
 
-	double lambert_w(double z, int k = 0)
+	template<typename ArgumentType>
+	std::complex<ArgumentType> lambert_w(const std::complex<ArgumentType> &z)
 	{
-		if( (k == 0) || (k == -1) )
-		{
-			if( (k == -1) )
-			{
-				if(z == 0)
-				{
-					return -std::numeric_limits<double>::infinity();
-				}
-				else if( z < -std::exp(-1.) || z > 0 )
-				{
-					return std::numeric_limits<double>::quiet_NaN();
-				}
-				else
-				{
-					return _lambw_raw<double,double,int,16>(z, k);
-				}
-			}
-			else if( (k == 0) && (std::isinf(z)) && (z > 0) )
-			{
-				return std::numeric_limits<double>::infinity();
-			}
-			else
-			{
-				return _lambw_raw<double,double,int,16>(z, k);
-			}
-		}
-		else
-		{
-			return std::numeric_limits<double>::quiet_NaN();
-		}
+		return _lambw_raw<std::complex<ArgumentType>,ArgumentType,int>(z, 0);
 	}
 
-	long double lambert_w(long double z, int k = 0)
+	template<typename ArgumentType, typename IndexType>
+	std::complex<ArgumentType> lambert_w(const std::complex<ArgumentType> &z, IndexType k)
 	{
-		if( (k == 0) || (k == -1) )
-		{
-			if( (k == -1) )
-			{
-				if(z == 0)
-				{
-					return -std::numeric_limits<long double>::infinity();
-				}
-				else if( z < -std::exp(-1.l) || z > 0 )
-				{
-					return std::numeric_limits<long double>::quiet_NaN();
-				}
-				else
-				{
-					return _lambw_raw<long double,long double,int,24>(z, k);
-				}
-			}
-			else if( (k == 0) && (std::isinf(z)) && (z > 0) )
-			{
-				return std::numeric_limits<long double>::infinity();
-			}
-			else
-			{
-				return _lambw_raw<long double,long double,int,24>(z, k);
-			}
-		}
-		else
-		{
-			return std::numeric_limits<long double>::quiet_NaN();
-		}
-	}
-
-	std::complex<float> lambert_w(const std::complex<float> &z)
-	{
-		return _lambw_raw<std::complex<float>,float,int,8>(z, 0);
-	}
-
-	std::complex<double> lambert_w(const std::complex<double> &z)
-	{
-		return _lambw_raw<std::complex<double>,double,int,16>(z, 0);
-	}
-
-	std::complex<long double> lambert_w(const std::complex<long double> &z)
-	{
-		return _lambw_raw<std::complex<long double>,long double,int,24>(z, 0);
-	}
-
-	template<typename IndexType>
-	std::complex<float> lambert_w(const std::complex<float> &z, IndexType k)
-	{
-		return _lambw_raw<std::complex<float>,float,IndexType,8>(z, k);
-	}
-
-	template<typename IndexType>
-	std::complex<double> lambert_w(const std::complex<double> &z, IndexType k)
-	{
-		return _lambw_raw<std::complex<double>,double,IndexType,16>(z, k);
-	}
-
-	template<typename IndexType>
-	std::complex<long double> lambert_w(const std::complex<long double> &z, IndexType k)
-	{
-		return _lambw_raw<std::complex<long double>,long double,IndexType,24>(z, k);
+		return _lambw_raw<std::complex<ArgumentType>,ArgumentType,IndexType>(z, k);
 	}
 
 	/*
 	template<typename ArgumentType>
 	ArgumentType wright_omega(const ArgumentType &z)
 	{
-		return lambert_w(std::exp(z),(long long)boost::math::round(std::imag(z)/boost::math::constants::two_pi<BOOST_TYPEOF(std::imag(z))>()));
+		return lambert_w(std::exp(z),(long long)boost::math::round(_lambw_complex_imag(z)/boost::math::constants::two_pi<BOOST_TYPEOF(std::abs(z))>()));
 	}
 	*/
 
 	template<typename ArgumentType, typename IndexType>
 	ArgumentType alt_lambert_w(const ArgumentType &z, IndexType k)
 	{
-		if(std::imag(z)<0)
+		if(_lambw_complex_imag(z)<0)
 		{
 			return lambert_w(z,-k);
 		}
