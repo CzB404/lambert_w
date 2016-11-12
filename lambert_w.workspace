@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="lambert_w">
+		<Project filename="example/lambert_w_dev/lambert_w_dev.cbp" />
+		<Project filename="lambert_w.cbp" />
+		<Project filename="example/lambw_plot/lambw_plot.cbp" />
+	</Workspace>
+</CodeBlocks_workspace_file>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="lambert_w" />
+		<Option pch_mode="2" />
+		<Option compiler="null" />
+		<Build>
+			<Target title="Debug">
+				<Option type="4" />
+				<Option compiler="null" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option type="4" />
+				<Option compiler="null" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="include/boost/math/special_functions/detail/lambert_w_asy.hpp" />
+		<Unit filename="include/boost/math/special_functions/detail/lambert_w_iter.hpp" />
+		<Unit filename="include/boost/math/special_functions/detail/lambert_w_laur.hpp" />
+		<Unit filename="include/boost/math/special_functions/detail/lambert_w_mid.hpp" />
+		<Unit filename="include/boost/math/special_functions/detail/lambert_w_raw.hpp" />
+		<Unit filename="include/boost/math/special_functions/detail/lambert_w_sing.hpp" />
+		<Unit filename="include/boost/math/special_functions/detail/lambert_w_tay.hpp" />
+		<Unit filename="include/boost/math/special_functions/detail/lambert_w_tools.hpp" />
+		<Unit filename="include/boost/math/special_functions/lambert_w.hpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

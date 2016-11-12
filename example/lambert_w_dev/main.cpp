@@ -4,7 +4,6 @@
 //  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-
 #define BOOST_MATH_DOMAIN_ERROR_POLICY ignore_error
 #define BOOST_MATH_POLE_ERROR_POLICY ignore_error
 #define BOOST_MATH_OVERFLOW_ERROR_POLICY ignore_error
@@ -23,259 +22,200 @@
 #define BOOST_MATH_EVALUATION_ERROR_POLICY throw_on_error
 #define BOOST_MATH_INDETERMINATE_RESULT_ERROR_POLICY throw_on_error
 */
+
 #include <iostream>
+#include <fstream>
 #include <complex>
-#include <ctime>
-#include <cstdlib>
 #include <cmath>
+#include <ctime>
 #include <sstream>
 #include <boost/math/constants/constants.hpp>
 #include <boost/math/special_functions/lambert_w.hpp>
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <boost/multiprecision/cpp_dec_float.hpp>
-//#include <boost/math/tools/test.hpp>
+#include <boost/multiprecision/float128.hpp>
+#include <boost/math/tools/test.hpp>
+#include <boost/math/tools/test_data.hpp>
+#include <gsl/gsl_sf_lambert.h>
+#include "testing_tools.hpp"
 
-typedef boost::multiprecision::cpp_bin_float_50 MultiPrec;
+typedef boost::multiprecision::float128 MultiPrec;
 typedef double RealType;
 typedef int IntegralType;
 
-const bool real_type_tests = true;
-const bool multiprec_tests = false;
+const bool precision_tests = true;
+const std::size_t test_count = 1000;
+
 const bool benchmark = false;
+const std::size_t benchmark_count = 1000000;
 
-template<typename ArgumentType>
-ArgumentType random_cauchy_number()
+const bool plotting = false;
+
+template<class CoeffType>
+CoeffType p(CoeffType z, int k)
 {
-     using std::tan;
-
-     ArgumentType r = (ArgumentType)rand()/(ArgumentType)RAND_MAX;
-     return tan(boost::math::constants::pi<ArgumentType>()*(r-(ArgumentType)0.5));
+     return ((CoeffType)pow(-1.,k%2))*sqrt((CoeffType)2.*(boost::math::constants::e<CoeffType>()*z+(CoeffType)1.));
 }
 
-template<typename ArgumentType>
-ArgumentType random_unif_number(ArgumentType a, ArgumentType b)
+template<class ArgumentType>
+ArgumentType test_lambw(const ArgumentType& z)
 {
-     ArgumentType r = (ArgumentType)rand()/(ArgumentType)RAND_MAX;
-     return a+r*(b-a);
-}
-
-template<typename ArgumentType>
-ArgumentType comp(ArgumentType x1, ArgumentType x2)
-{
-     using std::abs;
-
-     if(x1 == x2)
-     {
-          return (ArgumentType)0.;
-     }
-     else
-     {
-          return std::max( abs((x1-x2)/x1) , abs((x1-x2)/x1) )/std::numeric_limits<ArgumentType>::epsilon();
-     }
-}
-
-template<typename ArgumentType>
-ArgumentType comp(std::complex<ArgumentType> x1, std::complex<ArgumentType> x2)
-{
-     using std::abs;
-     using std::arg;
-
-     if(x1 == x2)
-     {
-          return (ArgumentType)0.;
-     }
-     else
-     {
-          return std::max( comp(abs(x1),abs(x2)) , comp(arg(x1),arg(x2)) );
-     }
-}
-
-template<typename ArgumentType>
-void test_exact_value(ArgumentType x, ArgumentType w_act, IntegralType k = 0)
-{
-     using std::abs;
-
-     ArgumentType w;
-     try
-     {
-          w = boost::math::lambert_w(x,k);
-          BOOST_TYPEOF(abs(x)) err = comp(w,w_act);
-
-          std::cout << "W(" << x << ',' << k << ") = " << w << std::endl;
-          std::cout << "(Actual value: " << w_act << ", Error: " << err << " eps)" << std::endl;
-     }
-     catch(const std::exception& e)
-     {
-          std::cout << "Exception encountered while evaluating W(" << x << ',' << k << "):" << std::endl;
-          std::cout << e.what() << std::endl;
-     }
-
-}
-
-template<typename ArgumentType, std::size_t N>
-void ln_identity_test()
-{
-     using std::log;
      using std::exp;
+     using std::abs;
+     ArgumentType w = boost::math::lambert_w(z);
+     ArgumentType t = w*exp(w);
 
-     ArgumentType sum_err = (ArgumentType)0.;
-     ArgumentType max_err = (ArgumentType)0.;
-
-     ArgumentType max_err_x = std::numeric_limits<ArgumentType>::quiet_NaN();
-
-     for(std::size_t k = 0; k < N; ++k)
-     {
-          ArgumentType a = random_unif_number(
-               boost::math::lambw::rec_e<ArgumentType>(),
-               boost::math::constants::e<ArgumentType>());
-          ArgumentType w = boost::math::lambert_w(-log(a)/a);
-          ArgumentType w_act = -log(a);
-          ArgumentType err = comp(w,w_act);
-          sum_err += err;
-          if(max_err < err)
-          {
-               max_err = err;
-               max_err_x = -log(a)/a;
-          }
-     }
-
-     std::cout << "W(-ln(a)/a) = -ln(a), 1/e <= a <= e" << std::endl;
-     std::cout << "Average error: " << sum_err/N << " eps" << std::endl;
-     std::cout << "Max error: " << max_err << " eps" << std::endl;
-     std::cout << "(at x = " << max_err_x << " )" << std::endl;
-     std::cout << "(which is -1/e + " << ( max_err_x+boost::math::lambw::rec_e<ArgumentType>() )/std::numeric_limits<ArgumentType>::epsilon() << " eps )" << std::endl;
-
-     ArgumentType max_err_w = boost::math::lambert_w(max_err_x);
-
-     std::cout << "(The error of this tested with W(x)*exp(W(x)) = x is "
-          << comp(max_err_x,max_err_w*exp(max_err_w) ) << " eps )" << std::endl;
+     return (z==t)?(ArgumentType)0.:std::max(abs((z-t)/z),abs((z-t)/t))/std::numeric_limits<ArgumentType>::epsilon();
 }
 
-template<typename ArgumentType, std::size_t N>
-std::pair<ArgumentType,ArgumentType> inverse_identity_test(ArgumentType a, ArgumentType b, bool output = true)
+template<class ArgumentType>
+std::pair<ArgumentType,ArgumentType> test_complex_lambw(const ArgumentType& x, const ArgumentType& y)
 {
-     using std::log;
      using std::exp;
+     using std::abs;
+     std::complex<ArgumentType> z(x,y);
+     std::complex<ArgumentType> w = boost::math::lambert_w(z);
+     std::complex<ArgumentType> t = w*exp(w);
 
-     ArgumentType avg_err = (ArgumentType)0.;
-     ArgumentType max_err = (ArgumentType)0.;
-
-     for(std::size_t k = 0; k < N; ++k)
-     {
-          ArgumentType x_test = random_unif_number(a,b);
-          ArgumentType w = x_test*exp(x_test);
-          ArgumentType x = boost::math::lambert_w(w);
-          ArgumentType err = comp(x,x_test);
-          avg_err += err;
-          if(max_err < err)
-          {
-               max_err = err;
-          }
-     }
-
-     avg_err /= N;
-
-     if(output)
-     {
-          std::cout << "W(x)*exp(W(x)) = x, " << a << " <= x <= " << b << std::endl;
-          std::cout << "Average error: " << avg_err << " eps" << std::endl;
-          std::cout << "Max error: " << max_err << " eps" << std::endl;
-     }
-
-     return std::make_pair(avg_err,max_err);
+     ArgumentType ans = (z==t)?(ArgumentType)0.:std::max(abs((z-t)/z),abs((z-t)/t))/std::numeric_limits<ArgumentType>::epsilon();
+     //ArgumentType ans = abs(boost::math::lambw::_test_s(z,boost::math::lambert_w(z),boost::math::policies::policy<>()))/std::numeric_limits<ArgumentType>::epsilon();
+     return std::make_pair(ans,(ArgumentType)0.);
 }
 
-template<typename ArgumentType>
-void test_entire_range()
+template<class ArgumentType>
+std::pair<ArgumentType,ArgumentType> plot_complex_lambw(const ArgumentType& x, const ArgumentType& y)
 {
-
+     //std::complex<ArgumentType> w = (y<0)?boost::math::lambert_w(std::complex<ArgumentType>(x,y),1):boost::math::lambert_w(std::complex<ArgumentType>(x,y),-1);
+     std::complex<ArgumentType> w = boost::math::lambert_w(std::complex<ArgumentType>(x,y));
+     return std::make_pair(w.real(),w.imag());
 }
 
 int main()
 {
      std::srand(std::time(NULL));
 
-     if(real_type_tests)
+     if(precision_tests)
      {
+          RealType x;
+          RealType w_act;
+
           //W(-pi/2) = i*pi/2
           test_exact_value(std::complex<RealType>(-boost::math::constants::half_pi<RealType>(),(RealType)0.),
-                              std::complex<RealType>((RealType)0.,boost::math::constants::half_pi<RealType>()));
+                              std::complex<RealType>((RealType)0.,boost::math::constants::half_pi<RealType>()),0);
           std::cout << std::endl;
+
           //W(-1/e) = -1
-          test_exact_value(-boost::math::lambw::rec_e<RealType>(),(RealType)(-1.));
+          x = -boost::math::lambw::rec_e<RealType>();
+          w_act = (RealType)(-1.);
+          test_exact_value(x,w_act,0);
           std::cout << std::endl;
+
           //W(-1/e,-1) = -1
-          test_exact_value(-boost::math::lambw::rec_e<RealType>(),(RealType)(-1.),-1);
+          x = -boost::math::lambw::rec_e<RealType>();
+          w_act = (RealType)(-1.);
+          test_exact_value(x,w_act,-1);
           std::cout << std::endl;
+
           //W(0) = 0
-          test_exact_value((RealType)0.,(RealType)0.);
+          x = (RealType)0.;
+          w_act = (RealType)0.;
+          test_exact_value(x,w_act,0);
           std::cout << std::endl;
+
+          test_exact_value(std::complex<RealType>((RealType)0.,(RealType)0.),std::complex<RealType>((RealType)0.,(RealType)0.),0);
+          std::cout << std::endl;
+
           //W(0,-1) = -inf
-          test_exact_value((RealType)0.,-std::numeric_limits<RealType>::infinity(),-1);
+          x = (RealType)0.;
+          w_act = -std::numeric_limits<RealType>::infinity();
+          test_exact_value(x,w_act,-1);
           std::cout << std::endl;
+
           test_exact_value(std::complex<RealType>((RealType)0.,(RealType)0.),std::complex<RealType>(std::numeric_limits<RealType>::quiet_NaN(),std::numeric_limits<RealType>::quiet_NaN()),-1);
           std::cout << std::endl;
+
           //W(1) = Omega constant
+          x = (RealType)1.;
           RealType omega;
           std::stringstream omega_text("0.567143290409783872999968662210355549753815787186512508135131079223045793086684566693219446961752294557638");
           omega_text >> omega;
-          test_exact_value((RealType)1.,omega);
+          test_exact_value(x,omega,0);
           std::cout << std::endl;
-          test_exact_value((RealType)1.,std::numeric_limits<RealType>::quiet_NaN(),(IntegralType)1);
+
+          //Index bound test
+          w_act = std::numeric_limits<RealType>::quiet_NaN();
+          test_exact_value(x,w_act,(IntegralType)1);
           std::cout << std::endl;
+
           //W(e) = 1
-          test_exact_value(boost::math::constants::e<RealType>(),(RealType)1.);
+          x = boost::math::constants::e<RealType>();
+          w_act = (RealType)1.;
+          test_exact_value(x,w_act,0);
           std::cout << std::endl;
+
           //W(x->inf) -> inf
-          test_exact_value(std::numeric_limits<RealType>::infinity(),std::numeric_limits<RealType>::infinity());
-          std::cout << std::endl;
-          test_exact_value((RealType)1.,std::numeric_limits<RealType>::quiet_NaN(),(IntegralType)(-1));
-          std::cout << std::endl;
-
+          x = std::numeric_limits<RealType>::infinity();
+          w_act = std::numeric_limits<RealType>::infinity();
+          test_exact_value(x,w_act,0);
           std::cout << std::endl;
 
-          ln_identity_test<RealType,10000>();
+          //Range bound test
+          x = (RealType)1.;
+          w_act = std::numeric_limits<RealType>::quiet_NaN();
+          test_exact_value(x,w_act,(IntegralType)(-1));
+          std::cout << std::endl;
 
           std::cout << std::endl;
 
-          inverse_identity_test<RealType,10000>(-boost::math::lambw::rec_e<RealType>(),100);
+          ln_identity_test<RealType,test_count>();
 
-          /*
-          std::cout << "W(-1) = " << boost::math::lambert_w(-1.) << std::endl;
-          std::cout << "W(-1,-1) = " << boost::math::lambert_w(-1.,-1) << std::endl;
-          std::cout << "W(1,-1) = " << boost::math::lambert_w(1.,-1) << std::endl;
-          std::cout << "W(1+0i,-1) = " << boost::math::lambert_w(std::complex<RealType>(1,0),-1) << std::endl;
-          std::cout << "W(42) = " << boost::math::lambert_w(42.) << std::endl;
-          std::cout << "W(42)*exp(W(42)) = " << boost::math::lambert_w(42.)*std::exp(boost::math::lambert_w(42.)) << std::endl;
-          */
-     }
+          std::cout << std::endl;
 
-     if(multiprec_tests)
-     {
-          MultiPrec x = -exp(-(MultiPrec)1.);
-          MultiPrec w = boost::math::lambert_w(x,-1);
-          MultiPrec err = boost::math::lambw::_test_s(x,w);
+          inverse_identity_test<RealType,test_count>(-1,10);
 
-          std::cout << "W(" << x << ") (Multiprecision) = " << w << " (With an error of " << err << " )" << std::endl;
+          std::cout << std::endl;
+
+          gsl_inverse_identity_test<double,test_count>(-1,10);
      }
 
      if(benchmark)
      {
-          const std::size_t L = 1000000;
+          std::clock_t t0 = std::clock();
 
-          std::time_t t0 = std::time(NULL);
-
-          for(std::size_t k = 0; k < L; ++k)
+          for(std::size_t k = 0; k < benchmark_count; ++k)
           {
                boost::math::lambert_w(random_unif_number<RealType>(0,10));
+               //gsl_sf_lambert_W0(random_unif_number<RealType>(0,10));
           }
 
-          std::time_t t1 = std::time(NULL);
+          std::clock_t t1 = std::clock();
 
-          std::time_t diff = t1-t0;
+          std::clock_t diff = t1-t0;
 
-          std::cout << "Calculating W for " << L << " random values took " << diff << " seconds." << std::endl;
+          std::cout << "Calculating W for " << benchmark_count << " random values took " << (double)diff/(double)CLOCKS_PER_SEC << " seconds. (CPU time)" << std::endl;
+          std::cout << "Effectively " << (double)diff/(double)CLOCKS_PER_SEC/benchmark_count << " seconds/call." << std::endl;
      }
 
-    return 0;
+     if(plotting)
+     {
+          boost::math::tools::test_data<RealType> data;
+          //RealType (*pf)(const RealType&) = test_lambw;
+          std::pair<RealType,RealType> (*pf)(const RealType&, const RealType&) = test_complex_lambw;
+          //RealType (*pf)(const RealType&) = boost::math::lambert_w;
+          //std::pair<RealType,RealType> (*pf)(const RealType&, const RealType&) = plot_complex_lambw;
+          RealType d1 = 0.2;
+          RealType d0 = -d1;
+          int samp = 128;
+          data.insert(pf, boost::math::tools::make_periodic_param(d0,d1,samp), boost::math::tools::make_periodic_param(d0,d1,samp));
+          //data.insert(pf, boost::math::tools::make_periodic_param(d0,d1,samp));
+
+          std::ofstream file("test_raw.txt");
+          file.precision(std::numeric_limits<RealType>::digits10+2);
+          boost::math::tools::write_csv(file, data, "\t");
+          file.close();
+
+          make_complex_gnuplottable("test_raw.txt","test.txt");
+     }
+
+     return 0;
 }

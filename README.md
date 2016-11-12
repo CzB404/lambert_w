@@ -11,6 +11,5 @@ The library uses the C++03 standard and requires the compiler to support that st
 It also uses the Boost Math Constants library.
 
 The function itself can be called with `boost::math::lambert_w(ArgumentType z, IndexType k)`,
-where `ArgumentType` can be any real number type, and `std::complex` numbers with
-template parameters `float`, `double` or `long double`.
-`IndexType` is expected to be an integer type.
+where `ArgumentType` can be any real or `std::complex` number type,
+except `boost::multiprecision::cpp_dec_float`. `IndexType` is expected to be an integer type.
