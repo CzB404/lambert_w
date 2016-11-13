@@ -10,8 +10,8 @@ For now the library is slowly being prepared to be submitted to the Boost review
 The library uses the C++03 standard and requires the compiler to support that standard.
 It also uses the Boost Math Constants library.
 
-To use the library, add the `include` directory  in this repository as a header search directory
-in your compiler and use the following include:
+To use the library, add the `include` directory (along with the boost include directory)
+in this repository as a header search directory in your compiler and use the following include:
 `#include <boost/math/special_functions/lambert_w.hpp>`
 
 The function itself can be called with `boost::math::lambert_w(ArgumentType z, IndexType k)`,
