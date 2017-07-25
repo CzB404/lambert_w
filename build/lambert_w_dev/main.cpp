@@ -49,8 +49,6 @@ const std::size_t test_count = 1000;
 const bool benchmark = false;
 const std::size_t benchmark_count = 1000000;
 
-const bool plotting = false;
-
 template<class CoeffType>
 CoeffType p(CoeffType z, int k)
 {
@@ -68,28 +66,6 @@ ArgumentType test_lambw(const ArgumentType& z)
      return (z==t)?(ArgumentType)0.:std::max(abs((z-t)/z),abs((z-t)/t))/std::numeric_limits<ArgumentType>::epsilon();
 }
 
-template<class ArgumentType>
-std::pair<ArgumentType,ArgumentType> test_complex_lambw(const ArgumentType& x, const ArgumentType& y)
-{
-     using std::exp;
-     using std::abs;
-     std::complex<ArgumentType> z(x,y);
-     std::complex<ArgumentType> w = boost::math::lambert_w(z);
-     std::complex<ArgumentType> t = w*exp(w);
-
-     ArgumentType ans = (z==t)?(ArgumentType)0.:std::max(abs((z-t)/z),abs((z-t)/t))/std::numeric_limits<ArgumentType>::epsilon();
-     //ArgumentType ans = abs(boost::math::lambw::_test_s(z,boost::math::lambert_w(z),boost::math::policies::policy<>()))/std::numeric_limits<ArgumentType>::epsilon();
-     return std::make_pair(ans,(ArgumentType)0.);
-}
-
-template<class ArgumentType>
-std::pair<ArgumentType,ArgumentType> plot_complex_lambw(const ArgumentType& x, const ArgumentType& y)
-{
-     //std::complex<ArgumentType> w = (y<0)?boost::math::lambert_w(std::complex<ArgumentType>(x,y),1):boost::math::lambert_w(std::complex<ArgumentType>(x,y),-1);
-     std::complex<ArgumentType> w = boost::math::lambert_w(std::complex<ArgumentType>(x,y));
-     return std::make_pair(w.real(),w.imag());
-}
-
 int main()
 {
      std::srand(std::time(NULL));
@@ -98,6 +74,10 @@ int main()
      {
           RealType x;
           RealType w_act;
+
+          using std::sqrt;
+          std::cout << comp(boost::math::lambw::_sing<RealType,RealType,IntegralType>(-boost::math::lambw::rec_e<RealType>(),(IntegralType)0),(RealType)(-1.)) << std::endl;
+          std::cout << std::endl;
 
           //W(-pi/2) = i*pi/2
           test_exact_value(std::complex<RealType>(-boost::math::constants::half_pi<RealType>(),(RealType)0.),
@@ -194,27 +174,6 @@ int main()
 
           std::cout << "Calculating W for " << benchmark_count << " random values took " << (double)diff/(double)CLOCKS_PER_SEC << " seconds. (CPU time)" << std::endl;
           std::cout << "Effectively " << (double)diff/(double)CLOCKS_PER_SEC/benchmark_count << " seconds/call." << std::endl;
-     }
-
-     if(plotting)
-     {
-          boost::math::tools::test_data<RealType> data;
-          //RealType (*pf)(const RealType&) = test_lambw;
-          std::pair<RealType,RealType> (*pf)(const RealType&, const RealType&) = test_complex_lambw;
-          //RealType (*pf)(const RealType&) = boost::math::lambert_w;
-          //std::pair<RealType,RealType> (*pf)(const RealType&, const RealType&) = plot_complex_lambw;
-          RealType d1 = 0.2;
-          RealType d0 = -d1;
-          int samp = 128;
-          data.insert(pf, boost::math::tools::make_periodic_param(d0,d1,samp), boost::math::tools::make_periodic_param(d0,d1,samp));
-          //data.insert(pf, boost::math::tools::make_periodic_param(d0,d1,samp));
-
-          std::ofstream file("test_raw.txt");
-          file.precision(std::numeric_limits<RealType>::digits10+2);
-          boost::math::tools::write_csv(file, data, "\t");
-          file.close();
-
-          make_complex_gnuplottable("test_raw.txt","test.txt");
      }
 
      return 0;

@@ -4,6 +4,9 @@
 #  Boost Software License, Version 1.0. (See accompanying file
 #  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+# This gnuplot script plots the files "lw_0.txt" and "lw_pm1.txt".
+# It requires the pngcairo terminal to use.
+
 reset
 
 set term wxt enh
@@ -38,7 +41,8 @@ set output "lw_composite.png"
 
 set view 70, 130
 
-splot "lw_0.txt" u 1:(-$2):(abs($3+$4*i)):(-arg($3+$4*i)) w pm3d title "W_0(z)",\
+splot \
+"lw_0.txt" u 1:(-$2):(abs($3+$4*i)):(-arg($3+$4*i)) w pm3d title "W_0(z)",\
 "lw_pm1.txt" u 1:2:(abs($3+$4*i)):(arg($3+$4*i)) w pm3d title "W_{\261 1}(z)"
 
 set output
