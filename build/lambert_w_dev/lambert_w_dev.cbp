@@ -22,7 +22,7 @@
 				<Option compiler="cygwin_gcc_620" />
 				<Compiler>
 					<Add option="-mtune=generic" />
-					<Add option="-O3" />
+					<Add option="-O2" />
 				</Compiler>
 			</Target>
 		</Build>
