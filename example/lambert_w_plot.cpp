@@ -122,7 +122,7 @@ int main()
      using std::exp;
      RealType d1 = 1.0;
      RealType d0 = -d1;
-     int samp = 1024;
+     const int samp = 1024;
 
      boost::math::tools::test_data<RealType> data;
      std::pair<RealType,RealType> (*pf)(const RealType&, const RealType&) =

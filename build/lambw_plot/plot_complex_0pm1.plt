@@ -39,7 +39,7 @@ set encoding iso_8859_1
 set term pngcairo enh truecolor size 1920,1080
 set output "lw_composite.png"
 
-set view 70, 130
+set view 65, 124
 
 splot \
 "lw_0.txt" u 1:(-$2):(abs($3+$4*i)):(-arg($3+$4*i)) w pm3d title "W_0(z)",\
